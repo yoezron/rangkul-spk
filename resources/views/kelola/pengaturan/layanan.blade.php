@@ -21,7 +21,7 @@
 
         <fieldset>
             <legend>Audit log</legend>
-            <p class="bantuan" style="margin-bottom: 12px">
+            <p class="bantuan mb-3">
                 Audit log mencatat tindakan pengelola: perubahan pengaturan, penugasan peran, pembuatan peran, dan unduhan rekap.
                 Kegiatan anggota tidak dicatat di sini.
             </p>

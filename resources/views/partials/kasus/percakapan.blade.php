@@ -8,19 +8,10 @@
     @param string $keterangan
 --}}
 <section class="kartu" id="percakapan">
-    <h2>Percakapan</h2>
+    <h2 class="flex items-center gap-2"><x-ikon nama="chat" class="size-5 text-utama" /> Percakapan</h2>
     @if ($keterangan ?? null)
         <p class="redup kecil">{{ $keterangan }}</p>
     @endif
-
-    <style>
-        .daftar-pesan { max-height: 460px; overflow-y: auto; display: flex; flex-direction: column; gap: 10px; padding: 4px 2px 8px; }
-        .gelembung { max-width: 82%; padding: 9px 12px; border-radius: 12px; border: 1px solid var(--garis); background: var(--latar); }
-        .gelembung.saya { align-self: flex-end; background: var(--info-latar); border-color: var(--info-garis); }
-        .gelembung.sistem { align-self: center; max-width: 92%; background: transparent; border-style: dashed; font-size: .875rem; color: var(--redup); text-align: center; }
-        .kepala-pesan { font-size: .75rem; color: var(--redup); margin-bottom: 2px; }
-        .isi-pesan { white-space: pre-wrap; overflow-wrap: anywhere; }
-    </style>
 
     <div class="daftar-pesan" id="daftar-pesan" data-url="{{ route('percakapan.daftar', $permintaan) }}" aria-live="polite">
         <p class="redup kecil" data-kosong>Memuat percakapan…</p>
@@ -28,11 +19,11 @@
     <noscript><p class="catatan">Percakapan membutuhkan JavaScript. Aktifkan JavaScript di peramban Anda.</p></noscript>
 
     @if ($bolehKirim)
-        <form method="POST" action="{{ route('percakapan.kirim', $permintaan) }}" id="formulir-pesan" style="margin-top: 10px">
+        <form class="mt-2.5" method="POST" action="{{ route('percakapan.kirim', $permintaan) }}" id="formulir-pesan">
             @csrf
             <label for="isi-pesan" class="kecil">Tulis pesan</label>
             <textarea id="isi-pesan" name="isi" rows="3" maxlength="5000" required></textarea>
-            <div class="baris-aksi" style="margin-top: 8px; justify-content: space-between">
+            <div class="baris-aksi mt-2 justify-between">
                 <span class="redup kecil">Ctrl + Enter untuk mengirim</span>
                 <button type="submit" class="tombol">Kirim</button>
             </div>

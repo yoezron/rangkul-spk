@@ -9,7 +9,7 @@
 
     <p><a class="tombol" href="{{ route('kelola.instrumen.create') }}">Buat instrumen</a></p>
 
-    <div class="gulir kartu" style="padding: 4px 8px">
+    <div class="gulir kartu p-2!">
         <table>
             <thead><tr><th>Urutan</th><th>Instrumen</th><th>Butir</th><th>Sudah dijawab</th><th>Di formulir</th><th></th></tr></thead>
             <tbody>

@@ -2,8 +2,341 @@
 
 @source '../../vendor/laravel/framework/src/Illuminate/Pagination/resources/views/*.blade.php';
 @source '../../storage/framework/views/*.php';
+@source '../views';
+
+/*
+| Warna semantik SPK Rangkul.
+| Nilainya diganti otomatis untuk mode gelap (prefers-color-scheme), sehingga
+| utilitas seperti bg-permukaan, text-redup, border-garis tidak perlu varian dark:.
+*/
+:root {
+    --c-latar: #f6f3ee;
+    --c-permukaan: #ffffff;
+    --c-permukaan-2: #faf8f4;
+    --c-garis: #e7e1d8;
+    --c-teks: #23262a;
+    --c-redup: #6b6f76;
+    --c-utama: #1f6f6b;
+    --c-utama-tua: #165753;
+    --c-utama-lembut: #e3f1ef;
+    --c-utama-garis: #b9dbd6;
+    --c-aksen: #e8875b;
+    --c-aksen-lembut: #fdeee6;
+    --c-waspada: #8a5a00;
+    --c-waspada-lembut: #fdf3df;
+    --c-waspada-garis: #efd59a;
+    --c-bahaya: #b42318;
+    --c-bahaya-lembut: #fdecea;
+    --c-bahaya-garis: #f3c0ba;
+    --c-sukses: #1e7a46;
+    --c-sukses-lembut: #e5f4ea;
+    --c-teks-tombol: #ffffff;
+}
+
+@media (prefers-color-scheme: dark) {
+    :root {
+        --c-latar: #121514;
+        --c-permukaan: #1b1f1e;
+        --c-permukaan-2: #202524;
+        --c-garis: #2f3634;
+        --c-teks: #e9ebe8;
+        --c-redup: #a2a8a5;
+        --c-utama: #5cc2b9;
+        --c-utama-tua: #7dd3cb;
+        --c-utama-lembut: #1c3533;
+        --c-utama-garis: #2c5753;
+        --c-aksen: #f0a17c;
+        --c-aksen-lembut: #3a2a22;
+        --c-waspada: #f1c56b;
+        --c-waspada-lembut: #3a3020;
+        --c-waspada-garis: #6d5a2c;
+        --c-bahaya: #f4a49b;
+        --c-bahaya-lembut: #3d2220;
+        --c-bahaya-garis: #77403a;
+        --c-sukses: #7fd3a0;
+        --c-sukses-lembut: #1f3628;
+        --c-teks-tombol: #0f1d1c;
+    }
+}
+
+@theme inline {
+    --color-latar: var(--c-latar);
+    --color-permukaan: var(--c-permukaan);
+    --color-permukaan-2: var(--c-permukaan-2);
+    --color-garis: var(--c-garis);
+    --color-teks: var(--c-teks);
+    --color-redup: var(--c-redup);
+    --color-utama: var(--c-utama);
+    --color-utama-tua: var(--c-utama-tua);
+    --color-utama-lembut: var(--c-utama-lembut);
+    --color-utama-garis: var(--c-utama-garis);
+    --color-aksen: var(--c-aksen);
+    --color-aksen-lembut: var(--c-aksen-lembut);
+    --color-waspada: var(--c-waspada);
+    --color-waspada-lembut: var(--c-waspada-lembut);
+    --color-waspada-garis: var(--c-waspada-garis);
+    --color-bahaya: var(--c-bahaya);
+    --color-bahaya-lembut: var(--c-bahaya-lembut);
+    --color-bahaya-garis: var(--c-bahaya-garis);
+    --color-sukses: var(--c-sukses);
+    --color-sukses-lembut: var(--c-sukses-lembut);
+    --color-teks-tombol: var(--c-teks-tombol);
+}
 
 @theme {
-    --font-sans: 'Instrument Sans', ui-sans-serif, system-ui, sans-serif, 'Apple Color Emoji', 'Segoe UI Emoji',
-        'Segoe UI Symbol', 'Noto Color Emoji';
+    --font-sans: ui-sans-serif, system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif, 'Apple Color Emoji', 'Segoe UI Emoji';
+    --shadow-lembut: 0 1px 2px rgb(35 38 42 / 0.04), 0 4px 16px -4px rgb(35 38 42 / 0.08);
+    --shadow-angkat: 0 2px 4px rgb(35 38 42 / 0.05), 0 12px 32px -8px rgb(35 38 42 / 0.16);
+}
+
+@layer base {
+    html {
+        -webkit-text-size-adjust: 100%;
+    }
+
+    body {
+        @apply bg-latar font-sans text-[15px] leading-relaxed text-teks antialiased sm:text-base;
+    }
+
+    h1 {
+        @apply text-2xl font-bold tracking-tight text-teks sm:text-[1.75rem] sm:leading-tight;
+    }
+
+    h2 {
+        @apply mb-3 text-lg font-semibold text-teks;
+    }
+
+    p {
+        @apply mb-4 last:mb-0;
+    }
+
+    a {
+        @apply text-utama underline-offset-2 hover:underline;
+    }
+
+    label {
+        @apply mb-1.5 block text-sm font-semibold text-teks;
+    }
+
+    input[type='text'],
+    input[type='email'],
+    input[type='number'],
+    input[type='password'],
+    input[type='search'],
+    input[type='url'],
+    input[type='datetime-local'],
+    select,
+    textarea {
+        @apply block w-full rounded-xl border border-garis bg-permukaan px-3.5 py-2.5 text-[15px] text-teks shadow-xs transition placeholder:text-redup/70 focus:border-utama focus:ring-4 focus:ring-utama/15 focus:outline-none;
+    }
+
+    textarea {
+        @apply min-h-24 resize-y;
+    }
+
+    input[type='checkbox'],
+    input[type='radio'] {
+        @apply size-4 shrink-0 accent-[var(--c-utama)];
+    }
+
+    fieldset {
+        @apply mb-6 min-w-0 rounded-2xl border border-garis bg-permukaan p-5 shadow-lembut sm:p-6;
+    }
+
+    legend {
+        @apply px-2 text-base font-semibold text-teks;
+    }
+
+    table {
+        @apply w-full border-collapse text-sm;
+    }
+
+    th {
+        @apply border-b border-garis px-3 py-2.5 text-left text-xs font-semibold tracking-wide text-redup uppercase;
+    }
+
+    td {
+        @apply border-b border-garis px-3 py-3 align-top;
+    }
+
+    tbody tr:last-child td {
+        @apply border-b-0;
+    }
+
+    details > summary {
+        @apply cursor-pointer select-none;
+    }
+
+    ::selection {
+        @apply bg-utama/20;
+    }
+}
+
+@layer components {
+    /* Tombol */
+    .tombol {
+        @apply inline-flex cursor-pointer items-center justify-center gap-2 rounded-xl border border-transparent bg-utama px-4 py-2.5 text-sm font-semibold text-teks-tombol no-underline shadow-sm transition hover:bg-utama-tua hover:no-underline focus-visible:ring-4 focus-visible:ring-utama/25 focus-visible:outline-none active:translate-y-px disabled:cursor-not-allowed disabled:opacity-50;
+    }
+
+    .tombol.sekunder {
+        @apply border-garis bg-permukaan text-teks shadow-xs hover:bg-permukaan-2;
+    }
+
+    .tombol.bahaya {
+        @apply border-bahaya-garis bg-permukaan text-bahaya shadow-xs hover:bg-bahaya-lembut;
+    }
+
+    .tombol.ringkas {
+        @apply rounded-lg px-3 py-1.5 text-[13px];
+    }
+
+    .tombol.lebar {
+        @apply flex w-full py-3 text-[15px];
+    }
+
+    /* Wadah */
+    .kartu {
+        @apply mb-6 rounded-2xl border border-garis bg-permukaan p-5 shadow-lembut sm:p-6;
+    }
+
+    .catatan {
+        @apply mb-6 rounded-xl border border-waspada-garis bg-waspada-lembut px-4 py-3 text-sm text-teks;
+    }
+
+    .catatan.info {
+        @apply border-utama-garis bg-utama-lembut;
+    }
+
+    .catatan.galat {
+        @apply border-bahaya-garis bg-bahaya-lembut text-bahaya;
+    }
+
+    .catatan ul {
+        @apply m-0 list-disc pl-5;
+    }
+
+    .lencana {
+        @apply mr-1 mb-1 inline-flex items-center gap-1 rounded-full border border-utama-garis bg-utama-lembut px-2.5 py-0.5 text-xs font-medium whitespace-nowrap text-utama;
+    }
+
+    .lencana.peringatan {
+        @apply border-waspada-garis bg-waspada-lembut text-waspada;
+    }
+
+    .lencana.bahaya {
+        @apply border-bahaya-garis bg-bahaya-lembut text-bahaya;
+    }
+
+    .lencana.netral {
+        @apply border-garis bg-permukaan-2 text-redup;
+    }
+
+    /* Formulir */
+    .bidang {
+        @apply mb-5;
+    }
+
+    .bantuan {
+        @apply mt-1.5 mb-0 text-[13px] leading-snug text-redup;
+    }
+
+    label.pilihan {
+        @apply flex cursor-pointer items-start gap-3 rounded-xl px-1 py-1.5 text-[15px] font-normal;
+    }
+
+    label.pilihan input {
+        @apply mt-1;
+    }
+
+    label.pilihan.mati {
+        @apply cursor-not-allowed text-redup;
+    }
+
+    /* Teks */
+    .redup {
+        @apply text-[15px] text-redup;
+    }
+
+    .kecil {
+        @apply text-sm;
+    }
+
+    /* Tata letak kecil */
+    .gulir {
+        @apply overflow-x-auto;
+    }
+
+    .baris-aksi {
+        @apply flex flex-wrap items-center gap-2;
+    }
+
+    .baris-aksi form {
+        @apply m-0;
+    }
+
+    .dua-kolom {
+        @apply grid gap-x-6 sm:grid-cols-2;
+    }
+
+    .grid-angka {
+        @apply mb-6 grid grid-cols-2 gap-3 lg:grid-cols-4;
+    }
+
+    .grid-angka .kartu {
+        @apply mb-0;
+    }
+
+    .angka {
+        @apply text-3xl leading-tight font-bold tracking-tight text-teks;
+    }
+
+    .halaman-nav {
+        @apply mt-5 flex gap-2;
+    }
+
+    /* Pilihan jawaban berbentuk kepingan (asesmen, keselamatan) */
+    .skala {
+        @apply flex flex-wrap gap-2;
+    }
+
+    .skala label {
+        @apply m-0 inline-flex cursor-pointer items-center gap-2 rounded-full border border-garis bg-permukaan px-3.5 py-2 text-sm font-medium text-teks transition select-none hover:border-utama-garis hover:bg-utama-lembut has-checked:border-utama has-checked:bg-utama has-checked:text-teks-tombol has-focus-visible:ring-4 has-focus-visible:ring-utama/25;
+    }
+
+    .skala label input {
+        @apply sr-only;
+    }
+
+    .butir {
+        @apply border-t border-garis py-4 first-of-type:border-t-0;
+    }
+
+    /* Percakapan */
+    .daftar-pesan {
+        @apply flex max-h-[28rem] flex-col gap-3 overflow-y-auto rounded-xl bg-permukaan-2 p-3 sm:p-4;
+    }
+
+    .gelembung {
+        @apply max-w-[85%] self-start rounded-2xl rounded-bl-md border border-garis bg-permukaan px-3.5 py-2.5 shadow-xs;
+    }
+
+    .gelembung.saya {
+        @apply self-end rounded-2xl rounded-br-md border-utama bg-utama text-teks-tombol;
+    }
+
+    .gelembung.saya .kepala-pesan {
+        @apply text-teks-tombol/75;
+    }
+
+    .gelembung.sistem {
+        @apply max-w-[92%] self-center rounded-full border-dashed bg-transparent px-4 py-1.5 text-center text-xs text-redup shadow-none;
+    }
+
+    .kepala-pesan {
+        @apply mb-0.5 text-[11px] font-medium text-redup;
+    }
+
+    .isi-pesan {
+        @apply text-[15px] break-words whitespace-pre-wrap;
+    }
 }

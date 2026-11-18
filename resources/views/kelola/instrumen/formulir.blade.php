@@ -58,10 +58,10 @@
 
         <fieldset>
             <legend>Pilihan jawaban</legend>
-            <p class="bantuan" style="margin-bottom: 10px">Berlaku untuk semua butir, kecuali butir yang diberi pilihan khusus.</p>
+            <p class="bantuan mb-2.5">Berlaku untuk semua butir, kecuali butir yang diberi pilihan khusus.</p>
             <div class="gulir">
                 <table>
-                    <thead><tr><th>Label</th><th style="width: 120px">Nilai</th></tr></thead>
+                    <thead><tr><th>Label</th><th class="w-[120px]">Nilai</th></tr></thead>
                     <tbody>
                         @foreach ($baris($pilihan, 3) as $indeks => $satu)
                             <tr>
@@ -76,10 +76,10 @@
 
         <fieldset>
             <legend>Subskala (opsional)</legend>
-            <p class="bantuan" style="margin-bottom: 10px">Kosongkan bila instrumen hanya punya satu skor total. Contoh DASS-21: d = Depresi, a = Kecemasan, s = Stres.</p>
+            <p class="bantuan mb-2.5">Kosongkan bila instrumen hanya punya satu skor total. Contoh DASS-21: d = Depresi, a = Kecemasan, s = Stres.</p>
             <div class="gulir">
                 <table>
-                    <thead><tr><th style="width: 140px">Kunci</th><th>Nama</th></tr></thead>
+                    <thead><tr><th class="w-[140px]">Kunci</th><th>Nama</th></tr></thead>
                     <tbody>
                         @foreach ($baris($subskala, 2) as $indeks => $satu)
                             <tr>
@@ -94,10 +94,10 @@
 
         <fieldset>
             <legend>Rentang skor dan tafsiran</legend>
-            <p class="bantuan" style="margin-bottom: 10px">Skor yang jatuh di antara min dan maks (termasuk keduanya) diberi label dan saran ini. Kolom subskala dikosongkan untuk skor total.</p>
+            <p class="bantuan mb-2.5">Skor yang jatuh di antara min dan maks (termasuk keduanya) diberi label dan saran ini. Kolom subskala dikosongkan untuk skor total.</p>
             <div class="gulir">
                 <table>
-                    <thead><tr><th style="width: 90px">Subskala</th><th style="width: 90px">Min</th><th style="width: 90px">Maks</th><th>Label</th><th>Saran untuk konselor</th></tr></thead>
+                    <thead><tr><th class="w-[90px]">Subskala</th><th class="w-[90px]">Min</th><th class="w-[90px]">Maks</th><th>Label</th><th>Saran untuk konselor</th></tr></thead>
                     <tbody>
                         @foreach ($baris($rentang, $tambah) as $indeks => $satu)
                             <tr>
@@ -115,14 +115,14 @@
 
         <fieldset>
             <legend>Butir pertanyaan</legend>
-            <p class="bantuan" style="margin-bottom: 10px">
+            <p class="bantuan mb-2.5">
                 <strong>Kritis ≥</strong>: jawaban dengan nilai sebesar ini atau lebih menandai permintaan DARURAT (mis. butir pikiran menyakiti diri).
                 <strong>Pilihan khusus</strong>: ditulis <code>Label=nilai; Label=nilai</code> bila butir memakai skala yang berbeda.
                 Kosongkan teks butir untuk menghapusnya.
             </p>
             <div class="gulir">
                 <table>
-                    <thead><tr><th style="width: 40px">#</th><th>Teks butir</th><th style="width: 80px">Subskala</th><th style="width: 70px">Terbalik</th><th style="width: 90px">Kritis ≥</th><th>Pilihan khusus</th></tr></thead>
+                    <thead><tr><th class="w-10">#</th><th>Teks butir</th><th class="w-20">Subskala</th><th class="w-[70px]">Terbalik</th><th class="w-[90px]">Kritis ≥</th><th>Pilihan khusus</th></tr></thead>
                     <tbody>
                         @foreach ($baris($butir, $tambah) as $indeks => $satu)
                             <tr>

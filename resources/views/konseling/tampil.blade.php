@@ -15,6 +15,6 @@
 
     @include('partials.kasus.catatan-sesi', ['permintaan' => $permintaan, 'bolehTulis' => auth()->user()->can('catat', $permintaan)])
 
-    <h2 style="margin-top: 28px">Isian dan asesmen anggota</h2>
+    <h2 class="mt-7">Isian dan asesmen anggota</h2>
     @include('partials.kasus.isian', ['permintaan' => $permintaan])
 </x-kelola>

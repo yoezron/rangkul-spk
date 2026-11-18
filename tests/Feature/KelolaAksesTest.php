@@ -126,6 +126,7 @@ class KelolaAksesTest extends TestCase
             'daftar pengguna' => ['GET', 'kelola.pengguna.index'],
             'detail pengguna' => ['GET', 'kelola.pengguna.tampil', ['sasaran']],
             'tambah pengguna' => ['POST', 'kelola.pengguna.tambah'],
+            'cari anggota di spk' => ['GET', 'kelola.pengguna.cari-spk'],
             'tugaskan peran' => ['POST', 'kelola.pengguna.tugaskan', ['sasaran']],
             'cabut peran' => ['DELETE', 'kelola.pengguna.cabut', ['sasaran', 'peran']],
             'daftar peran' => ['GET', 'kelola.peran.index'],

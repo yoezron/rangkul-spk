@@ -26,14 +26,14 @@
 
         <fieldset>
             <legend>Hak akses</legend>
-            <p class="bantuan" style="margin-bottom: 12px">
+            <p class="bantuan mb-3">
                 Hak pengelolaan otomatis disertai hak membuka dashboard. Anda hanya dapat memberikan hak yang Anda miliki sendiri.
             </p>
             @foreach (\App\Enums\Hak::perKelompok() as $kelompok => $daftarHak)
-                <p style="margin: 0 0 6px; font-weight: 600">{{ $kelompok }}</p>
+                <p class="mt-0 mb-1.5 font-semibold">{{ $kelompok }}</p>
                 @foreach ($daftarHak as $hak)
                     @php $dimiliki = in_array($hak->value, $hakAktor, true); @endphp
-                    <div class="bidang" style="margin-bottom: 8px">
+                    <div class="bidang mb-2">
                         <label class="pilihan {{ $dimiliki ? '' : 'mati' }}">
                             <input type="checkbox" name="hak[]" value="{{ $hak->value }}"
                                    @checked(in_array($hak->value, $hakDipilih, true)) @disabled(! $dimiliki)>

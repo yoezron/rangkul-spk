@@ -122,6 +122,7 @@ Route::middleware(['auth', PeriksaUlangAnggota::class])->group(function () {
         });
 
         Route::middleware('can:pengguna.tugaskan')->group(function () {
+            Route::get('pengguna/cari-spk', [PenggunaController::class, 'cariSpk'])->middleware('throttle:30,1')->name('pengguna.cari-spk');
             Route::post('pengguna', [PenggunaController::class, 'tambah'])->name('pengguna.tambah');
             Route::post('pengguna/{pengguna}/peran', [PenggunaController::class, 'tugaskan'])->name('pengguna.tugaskan');
             Route::delete('pengguna/{pengguna}/peran/{peran}', [PenggunaController::class, 'cabut'])->name('pengguna.cabut');

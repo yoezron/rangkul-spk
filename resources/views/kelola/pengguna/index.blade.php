@@ -3,25 +3,18 @@
 
     @can('pengguna.tugaskan')
         <section class="kartu">
-            <h2>Tambahkan anggota dari spk.or.id</h2>
-            <p class="redup kecil">Untuk anggota yang belum pernah membuka Rangkul. Masukkan id akun SPK-nya; data diambil dari spk.or.id dan hanya anggota terkonfirmasi yang dapat ditambahkan.</p>
-            <form method="POST" action="{{ route('kelola.pengguna.tambah') }}" class="baris-aksi">
-                @csrf
-                <div style="flex: 1 1 200px">
-                    <label for="spk_id" class="kecil">Id akun SPK</label>
-                    <input type="number" id="spk_id" name="spk_id" min="1" required value="{{ old('spk_id') }}">
-                </div>
-                <button type="submit" class="tombol" style="align-self: flex-end">Tambahkan</button>
-            </form>
+            <h2 class="mb-1 flex items-center gap-2"><x-ikon nama="kelompok" class="size-5 text-utama" /> Tambah &amp; tugaskan anggota dari spk.or.id</h2>
+            <p class="redup kecil">Cari anggota menurut namanya di spk.or.id — termasuk yang belum pernah membuka Rangkul — lalu tambahkan dan langsung tugaskan perannya, mis. sebagai peer konselor. Hanya anggota terkonfirmasi yang muncul.</p>
+            @include('kelola.pengguna.formulir-cari-spk', ['nama' => ''])
         </section>
     @endcan
 
-    <form method="GET" action="{{ route('kelola.pengguna.index') }}" class="baris-aksi" style="margin-bottom: 16px">
-        <div style="flex: 2 1 240px">
+    <form method="GET" action="{{ route('kelola.pengguna.index') }}" class="baris-aksi mb-4">
+        <div class="grow-[2] basis-[240px]">
             <label for="cari" class="kecil">Cari</label>
             <input type="search" id="cari" name="cari" value="{{ $cari }}" placeholder="Nama, nomor anggota, kampus, wilayah, atau id akun">
         </div>
-        <div style="flex: 1 1 180px">
+        <div class="grow basis-[180px]">
             <label for="peran" class="kecil">Peran</label>
             <select id="peran" name="peran">
                 <option value="">Semua</option>
@@ -30,13 +23,13 @@
                 @endforeach
             </select>
         </div>
-        <button type="submit" class="tombol sekunder" style="align-self: flex-end">Tampilkan</button>
+        <button type="submit" class="tombol sekunder self-end">Tampilkan</button>
     </form>
 
     @if ($pengguna->isEmpty())
         <p class="redup">Tidak ada pengguna yang cocok.</p>
     @else
-        <div class="gulir kartu" style="padding: 4px 8px">
+        <div class="gulir kartu p-2!">
             <table>
                 <thead>
                     <tr><th>Nama</th><th>No. anggota</th><th>Kampus</th><th>Wilayah</th><th>Peran SPK</th><th>Peran Rangkul</th></tr>

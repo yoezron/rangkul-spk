@@ -9,21 +9,21 @@
     <p class="redup kecil">Hanya terbaca oleh konselor pendamping, komite, dan superadmin — tidak oleh anggota.</p>
 
     @forelse ($permintaan->catatanSesi as $catatan)
-        <div style="padding: 10px 0; border-top: 1px solid var(--garis)">
-            <p class="kecil redup" style="margin: 0 0 6px">
+        <div class="border-t border-garis py-3 first:border-t-0">
+            <p class="kecil redup mt-0 mb-1.5">
                 {{ $catatan->created_at->format('d/m/Y H.i') }} · {{ $catatan->penulis?->nama ?? 'Konselor' }}
                 @if ($catatan->pertemuan) · pertemuan {{ $catatan->pertemuan->mulai_pada->format('d/m/Y') }} @endif
                 @if ($catatan->rujukan) <span class="lencana peringatan">Rujukan</span> @endif
             </p>
-            <p style="margin: 0 0 6px; white-space: pre-line"><strong>Rangkuman:</strong> {{ $catatan->rangkuman }}</p>
+            <p class="mt-0 mb-1.5 whitespace-pre-line"><strong>Rangkuman:</strong> {{ $catatan->rangkuman }}</p>
             @if ($catatan->analisis)
-                <p style="margin: 0 0 6px; white-space: pre-line"><strong>Analisis & prognosis:</strong> {{ $catatan->analisis }}</p>
+                <p class="mt-0 mb-1.5 whitespace-pre-line"><strong>Analisis & prognosis:</strong> {{ $catatan->analisis }}</p>
             @endif
             @if ($catatan->saran)
-                <p style="margin: 0 0 6px; white-space: pre-line"><strong>Saran:</strong> {{ $catatan->saran }}</p>
+                <p class="mt-0 mb-1.5 whitespace-pre-line"><strong>Saran:</strong> {{ $catatan->saran }}</p>
             @endif
             @if ($catatan->rujukan)
-                <p style="margin: 0; white-space: pre-line"><strong>Dirujuk ke:</strong> {{ $catatan->rujukan_ke }}</p>
+                <p class="m-0 whitespace-pre-line"><strong>Dirujuk ke:</strong> {{ $catatan->rujukan_ke }}</p>
             @endif
         </div>
     @empty
@@ -31,9 +31,9 @@
     @endforelse
 
     @if ($bolehTulis)
-        <details style="margin-top: 12px" @if ($errors->has('rangkuman') || $errors->has('rujukan_ke')) open @endif>
+        <details class="mt-3" @if ($errors->has('rangkuman') || $errors->has('rujukan_ke')) open @endif>
             <summary><strong>Tulis catatan sesi</strong></summary>
-            <form method="POST" action="{{ route('catatan.simpan', $permintaan) }}" style="margin-top: 10px">
+            <form class="mt-2.5" method="POST" action="{{ route('catatan.simpan', $permintaan) }}">
                 @csrf
                 @php $daftarPertemuan = $permintaan->pertemuan->where('status', \App\Enums\StatusPertemuan::Terjadwal); @endphp
                 @if ($daftarPertemuan->isNotEmpty())
@@ -62,7 +62,7 @@
                 <div class="bidang">
                     <input type="hidden" name="rujukan" value="0">
                     <label class="pilihan"><input type="checkbox" name="rujukan" value="1" @checked(old('rujukan'))> Menyarankan rujukan ke psikolog/profesional di luar tim Rangkul</label>
-                    <label for="rujukan_ke" class="kecil" style="margin-top: 6px">Dirujuk ke (nama psikolog, lembaga, atau layanan)</label>
+                    <label for="rujukan_ke" class="kecil mt-1.5">Dirujuk ke (nama psikolog, lembaga, atau layanan)</label>
                     <input type="text" id="rujukan_ke" name="rujukan_ke" maxlength="1000" value="{{ old('rujukan_ke') }}">
                 </div>
                 <button type="submit" class="tombol">Simpan catatan</button>

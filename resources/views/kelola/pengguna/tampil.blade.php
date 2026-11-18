@@ -62,9 +62,9 @@
 
             @can('pengguna.tugaskan')
                 @if ($bisaDitugaskan->isNotEmpty())
-                    <form method="POST" action="{{ route('kelola.pengguna.tugaskan', $pengguna) }}" class="baris-aksi" style="margin-top: 16px">
+                    <form method="POST" action="{{ route('kelola.pengguna.tugaskan', $pengguna) }}" class="baris-aksi mt-4">
                         @csrf
-                        <div style="flex: 1 1 200px">
+                        <div class="grow basis-[200px]">
                             <label for="peran_id" class="kecil">Tugaskan peran</label>
                             <select id="peran_id" name="peran_id" required>
                                 @foreach ($bisaDitugaskan as $peran)
@@ -72,7 +72,7 @@
                                 @endforeach
                             </select>
                         </div>
-                        <button type="submit" class="tombol" style="align-self: flex-end">Tugaskan</button>
+                        <button type="submit" class="tombol self-end">Tugaskan</button>
                     </form>
                 @endif
             @endcan

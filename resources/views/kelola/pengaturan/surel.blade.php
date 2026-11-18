@@ -3,7 +3,7 @@
 
     <section class="kartu">
         <h2>Menyiapkan Brevo</h2>
-        <ol style="margin: 0; padding-left: 20px">
+        <ol class="m-0 list-decimal space-y-2 pl-5 text-[15px]">
             <li>Di Brevo, buka <strong>SMTP &amp; API</strong>, tab <strong>SMTP</strong>. Salin <em>SMTP server</em>, <em>Port</em>, dan <em>Login</em> ke formulir di bawah.</li>
             <li>Di tab yang sama, buat <strong>SMTP key</strong> baru dan isikan sebagai sandi. Bukan API key (berawalan <code>xkeysib-</code>) dan bukan password akun Brevo.</li>
             <li>Daftarkan dan verifikasi alamat pengirim (mis. <code>rangkul@spk.or.id</code>) di menu <strong>Senders, Domains &amp; Dedicated IPs</strong>. Brevo menolak surel dari pengirim yang belum terverifikasi.</li>
@@ -83,7 +83,7 @@
         <button type="submit" class="tombol">Simpan</button>
     </form>
 
-    <section class="kartu" style="margin-top: 24px">
+    <section class="kartu mt-6">
         <h2>Kirim surel uji</h2>
         <p class="redup">Surel uji dikirim ke alamat akun SPK Anda ({{ auth()->user()->email ?: 'tidak ada' }}) memakai pengaturan yang sudah disimpan.</p>
         <form method="POST" action="{{ route('kelola.pengaturan.surel.uji') }}">

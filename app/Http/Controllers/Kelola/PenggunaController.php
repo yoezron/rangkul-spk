@@ -93,31 +93,82 @@ class PenggunaController extends Controller
      */
     public function tambah(Request $request, KlienSpk $klien): RedirectResponse
     {
-        $data = $request->validate(['spk_id' => ['required', 'integer', 'min:1']]);
+        $data = $request->validate([
+            'spk_id' => ['required', 'integer', 'min:1'],
+            'peran_id' => ['nullable', 'integer', 'exists:peran,id'],
+        ]);
         $spkId = (int) $data['spk_id'];
+        $peran = isset($data['peran_id']) ? Peran::query()->findOrFail($data['peran_id']) : null;
 
-        $ada = User::query()->where('spk_id', $spkId)->first();
+        abort_if($peran !== null && ! $peran->bolehDikelolaOleh($request->user()), 403, 'Anda tidak dapat menugaskan peran dengan hak akses yang tidak Anda miliki sendiri.');
 
-        if ($ada !== null) {
-            return redirect()->route('kelola.pengguna.tampil', $ada)->with('status', 'Anggota ini sudah terdaftar di Rangkul.');
+        $pengguna = User::query()->where('spk_id', $spkId)->first();
+        $baru = $pengguna === null;
+
+        if ($baru) {
+            try {
+                $jawaban = $klien->anggota($spkId);
+            } catch (PermintaanSpkGagal) {
+                return back()->withInput()->withErrors(['spk_id' => 'spk.or.id sedang tidak dapat dihubungi. Silakan coba lagi nanti.']);
+            }
+
+            if (! $jawaban->berhak) {
+                $alasan = self::ALASAN_TIDAK_BERHAK[$jawaban->alasan] ?? 'akun itu tidak berhak memakai Rangkul';
+
+                return back()->withInput()->withErrors(['spk_id' => "Tidak dapat ditambahkan: {$alasan}."]);
+            }
+
+            $pengguna = User::sinkronkanDariSpk($jawaban);
+            $this->audit->catat('pengguna.ditambahkan', PencatatAudit::sebut($pengguna));
         }
 
-        try {
-            $jawaban = $klien->anggota($spkId);
-        } catch (PermintaanSpkGagal) {
-            return back()->withInput()->withErrors(['spk_id' => 'spk.or.id sedang tidak dapat dihubungi. Silakan coba lagi nanti.']);
+        $ditugaskan = $peran !== null && $this->berikanPeran($pengguna, $peran, $request->user());
+
+        $pesan = match (true) {
+            $baru && $ditugaskan => "{$pengguna->nama} ditambahkan dan kini memegang peran {$peran->nama}.",
+            $baru => "{$pengguna->nama} ditambahkan. Sekarang Anda dapat menugaskan perannya.",
+            $ditugaskan => "{$pengguna->nama} kini memegang peran {$peran->nama}.",
+            $peran !== null => "{$pengguna->nama} sudah memegang peran {$peran->nama}.",
+            default => "{$pengguna->nama} sudah terdaftar di Rangkul.",
+        };
+
+        return redirect()->route('kelola.pengguna.tampil', $pengguna)->with('status', $pesan);
+    }
+
+    /**
+     * Cari anggota terkonfirmasi di spk.or.id menurut nama, untuk ditambahkan
+     * dan ditugaskan perannya tanpa perlu mengetahui id akunnya.
+     */
+    public function cariSpk(Request $request, KlienSpk $klien): View
+    {
+        $nama = trim((string) preg_replace('/\s+/u', ' ', (string) $request->query('nama', '')));
+        $hasil = null;
+        $galat = null;
+
+        if ($nama !== '') {
+            if (mb_strlen($nama) < 3 || mb_strlen($nama) > 60) {
+                $galat = 'Ketik 3 sampai 60 huruf dari nama anggota.';
+            } else {
+                try {
+                    $hasil = $klien->cari($nama);
+                } catch (PermintaanSpkGagal) {
+                    $galat = 'spk.or.id sedang tidak dapat dihubungi. Silakan coba lagi nanti.';
+                }
+            }
         }
 
-        if (! $jawaban->berhak) {
-            $alasan = self::ALASAN_TIDAK_BERHAK[$jawaban->alasan] ?? 'akun itu tidak berhak memakai Rangkul';
+        $aktor = $request->user();
+        $terdaftar = $hasil === null || $hasil === []
+            ? collect()
+            : User::query()->with('daftarPeran')->whereIn('spk_id', array_column($hasil, 'id'))->get()->keyBy('spk_id');
 
-            return back()->withInput()->withErrors(['spk_id' => "Tidak dapat ditambahkan: {$alasan}."]);
-        }
-
-        $pengguna = User::sinkronkanDariSpk($jawaban);
-        $this->audit->catat('pengguna.ditambahkan', PencatatAudit::sebut($pengguna));
-
-        return redirect()->route('kelola.pengguna.tampil', $pengguna)->with('status', 'Anggota ditambahkan. Sekarang Anda dapat menugaskan perannya.');
+        return view('kelola.pengguna.cari', [
+            'nama' => $nama,
+            'hasil' => $hasil,
+            'galat' => $galat,
+            'terdaftar' => $terdaftar,
+            'bisaDitugaskan' => Peran::query()->orderBy('nama')->get()->filter(fn (Peran $peran): bool => $peran->bolehDikelolaOleh($aktor))->values(),
+        ]);
     }
 
     public function tugaskan(Request $request, User $pengguna): RedirectResponse
@@ -128,14 +179,27 @@ class PenggunaController extends Controller
 
         abort_unless($peran->bolehDikelolaOleh($aktor), 403, 'Anda tidak dapat menugaskan peran dengan hak akses yang tidak Anda miliki sendiri.');
 
-        if ($pengguna->daftarPeran()->whereKey($peran->id)->exists()) {
+        if (! $this->berikanPeran($pengguna, $peran, $aktor)) {
             return back()->with('status', "{$pengguna->nama} sudah memegang peran {$peran->nama}.");
+        }
+
+        return back()->with('status', "{$pengguna->nama} kini memegang peran {$peran->nama}.");
+    }
+
+    /**
+     * Tugaskan peran dan catat di audit log. Mengembalikan false bila peran
+     * itu sudah dipegang. Pemeriksaan hak aktor dilakukan pemanggil.
+     */
+    private function berikanPeran(User $pengguna, Peran $peran, User $aktor): bool
+    {
+        if ($pengguna->daftarPeran()->whereKey($peran->id)->exists()) {
+            return false;
         }
 
         $pengguna->daftarPeran()->attach($peran->id, ['ditugaskan_oleh' => $aktor->id]);
         $this->audit->catat('penugasan.diberikan', PencatatAudit::sebut($pengguna), ['peran' => $peran->nama]);
 
-        return back()->with('status', "{$pengguna->nama} kini memegang peran {$peran->nama}.");
+        return true;
     }
 
     public function cabut(Request $request, User $pengguna, Peran $peran): RedirectResponse

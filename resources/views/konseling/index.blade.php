@@ -4,7 +4,7 @@
     @if ($daftar->isEmpty())
         <p class="redup">Belum ada kasus yang ditugaskan kepada Anda.</p>
     @else
-        <div class="gulir kartu" style="padding: 4px 8px">
+        <div class="gulir kartu p-2!">
             <table>
                 <thead><tr><th>Kode</th><th>Anggota</th><th>Status</th><th>Pesan baru</th><th>Ditugaskan</th></tr></thead>
                 <tbody>

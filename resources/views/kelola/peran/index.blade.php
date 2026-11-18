@@ -3,7 +3,7 @@
 
     <p><a class="tombol" href="{{ route('kelola.peran.create') }}">Buat peran</a></p>
 
-    <div class="gulir kartu" style="padding: 4px 8px">
+    <div class="gulir kartu p-2!">
         <table>
             <thead><tr><th>Peran</th><th>Hak akses</th><th>Pemegang</th><th></th></tr></thead>
             <tbody>

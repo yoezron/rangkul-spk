@@ -13,7 +13,7 @@
 @if ($permintaan->darurat)
     <div class="catatan galat" role="alert">
         <strong>DARURAT</strong> — kemungkinan risiko keselamatan. Hubungi anggota secepatnya; bila perlu arahkan ke layanan darurat.
-        <ul style="margin-top: 6px">
+        <ul class="mt-1.5">
             @foreach ($permintaan->alasan_darurat ?? [] as $alasan)
                 <li>{{ $alasan }}</li>
             @endforeach
@@ -57,7 +57,7 @@
                 @php $jawaban = $permintaan->keselamatan[$kunci] ?? null; @endphp
                 <tr>
                     <td>{{ $pertanyaan['teks'] }}</td>
-                    <td style="white-space: nowrap">
+                    <td class="whitespace-nowrap">
                         @if ($jawaban && $jawaban !== 'tidak')
                             <span class="lencana peringatan">{{ $pertanyaan['pilihan'][$jawaban] ?? $jawaban }}</span>
                         @else
@@ -76,14 +76,14 @@
         <span class="lencana">{{ $label }}</span>
     @endforeach
     @if ($permintaan->topik_lainnya)
-        <p style="margin: 8px 0 0">{{ $permintaan->topik_lainnya }}</p>
+        <p class="mt-2 mb-0">{{ $permintaan->topik_lainnya }}</p>
     @endif
 
-    <h2 style="margin-top: 18px">Cerita anggota</h2>
-    <p style="white-space: pre-line">{{ $permintaan->uraian }}</p>
+    <h2 class="mt-5">Cerita anggota</h2>
+    <p class="whitespace-pre-line">{{ $permintaan->uraian }}</p>
     @if ($permintaan->harapan)
         <h2>Harapan dari pendampingan</h2>
-        <p style="white-space: pre-line; margin: 0">{{ $permintaan->harapan }}</p>
+        <p class="m-0 whitespace-pre-line">{{ $permintaan->harapan }}</p>
     @endif
 </section>
 
@@ -92,12 +92,12 @@
     <p class="redup kecil">Hasil skrining, bukan diagnosis. Gunakan sebagai bahan pendalaman bersama anggota.</p>
     @forelse ($permintaan->jawabanAsesmen as $jawaban)
         @php $isian = $jawaban->isian; @endphp
-        <div style="padding: 10px 0; border-top: 1px solid var(--garis)">
+        <div class="border-t border-garis py-3 first:border-t-0">
             <strong>{{ $jawaban->nama_instrumen }}</strong>
             @if ($jawaban->kritis)
                 <span class="lencana peringatan">Butir kritis</span>
             @endif
-            <table style="margin-top: 6px">
+            <table class="mt-1.5">
                 <thead><tr><th>Skor</th><th>Nilai</th><th>Tafsiran</th><th>Saran</th></tr></thead>
                 <tbody>
                     @foreach ($isian['skor'] ?? [] as $skor)
@@ -111,24 +111,24 @@
                 </tbody>
             </table>
             @foreach ($isian['kritis'] ?? [] as $butirKritis)
-                <p class="kecil" style="margin: 6px 0 0; color: var(--galat)">⚠ {{ $butirKritis }}</p>
+                <p class="kecil mt-1.5 mb-0 text-bahaya">⚠ {{ $butirKritis }}</p>
             @endforeach
-            <details style="margin-top: 6px">
+            <details class="mt-1.5">
                 <summary class="kecil">Lihat jawaban per butir</summary>
-                <table style="margin-top: 6px">
+                <table class="mt-1.5">
                     <tbody>
                         @foreach ($isian['instrumen']['butir'] ?? [] as $nomor => $butir)
                             @php
                                 $nilai = $isian['jawaban'][$butir['kunci']] ?? null;
                                 $label = collect(PenilaiAsesmen::pilihanButir($isian['instrumen'], $butir))->first(fn ($pilihan) => (string) $pilihan['nilai'] === (string) $nilai)['label'] ?? '—';
                             @endphp
-                            <tr><td class="kecil">{{ $nomor + 1 }}. {{ $butir['teks'] }}</td><td class="kecil" style="white-space: nowrap">{{ $label }}</td></tr>
+                            <tr><td class="kecil">{{ $nomor + 1 }}. {{ $butir['teks'] }}</td><td class="kecil whitespace-nowrap">{{ $label }}</td></tr>
                         @endforeach
                     </tbody>
                 </table>
             </details>
         </div>
     @empty
-        <p class="redup" style="margin: 0">Tidak ada asesmen yang diisi.</p>
+        <p class="redup m-0">Tidak ada asesmen yang diisi.</p>
     @endforelse
 </section>

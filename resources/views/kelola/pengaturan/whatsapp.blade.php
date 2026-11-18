@@ -47,7 +47,7 @@
         <button type="submit" class="tombol">Simpan</button>
     </form>
 
-    <div class="dua-kolom" style="margin-top: 24px">
+    <div class="dua-kolom mt-6">
         <section class="kartu">
             <h2>Status perangkat</h2>
             @if ($perangkat)

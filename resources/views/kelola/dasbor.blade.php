@@ -1,61 +1,33 @@
 <x-kelola judul="Ringkasan" aktif="dasbor">
     @if ($layanan)
-        <h2>Layanan konsultasi</h2>
-        <div class="grid-angka">
-            <a class="kartu" style="text-decoration: none; color: inherit" href="{{ route('kelola.permintaan.index', ['status' => 'darurat']) }}">
-                <div class="redup kecil">Darurat terbuka</div>
-                <div class="angka" @if ($layanan['darurat'] > 0) style="color: var(--galat)" @endif>{{ $layanan['darurat'] }}</div>
-            </a>
-            <a class="kartu" style="text-decoration: none; color: inherit" href="{{ route('kelola.permintaan.index', ['status' => 'belum_ditugaskan']) }}">
-                <div class="redup kecil">Belum ditugaskan</div>
-                <div class="angka">{{ $layanan['belumDitugaskan'] }}</div>
-            </a>
-            <a class="kartu" style="text-decoration: none; color: inherit" href="{{ route('kelola.permintaan.index', ['status' => 'berlangsung']) }}">
-                <div class="redup kecil">Pendampingan berlangsung</div>
-                <div class="angka">{{ $layanan['berlangsung'] }}</div>
-            </a>
-            <a class="kartu" style="text-decoration: none; color: inherit" href="{{ route('kelola.permintaan.index') }}">
-                <div class="redup kecil">Menunggu persetujuan komite</div>
-                <div class="angka">{{ $layanan['menungguPersetujuan'] }}</div>
-            </a>
-            <div class="kartu">
-                <div class="redup kecil">Selesai bulan ini</div>
-                <div class="angka">{{ $layanan['selesaiBulanIni'] }}</div>
+        <section class="mb-8">
+            <h2 class="flex items-center gap-2"><x-ikon nama="hati" class="size-5 text-aksen" /> Layanan konsultasi</h2>
+            <div class="grid grid-cols-2 gap-3 md:grid-cols-3 2xl:grid-cols-5">
+                <x-angka label="Darurat terbuka" :nilai="$layanan['darurat']" ikon="peringatan" :warna="$layanan['darurat'] > 0 ? 'bahaya' : 'netral'" :tautan="route('kelola.permintaan.index', ['status' => 'darurat'])" />
+                <x-angka label="Belum ditugaskan" :nilai="$layanan['belumDitugaskan']" ikon="kotak-masuk" warna="waspada" :tautan="route('kelola.permintaan.index', ['status' => 'belum_ditugaskan'])" />
+                <x-angka label="Pendampingan berlangsung" :nilai="$layanan['berlangsung']" ikon="chat" :tautan="route('kelola.permintaan.index', ['status' => 'berlangsung'])" />
+                <x-angka label="Menunggu persetujuan komite" :nilai="$layanan['menungguPersetujuan']" ikon="jam" warna="aksen" :tautan="route('kelola.permintaan.index')" />
+                <x-angka label="Selesai bulan ini" :nilai="$layanan['selesaiBulanIni']" ikon="centang" warna="sukses" />
             </div>
-        </div>
-        <h2>Sistem</h2>
+        </section>
     @endif
-    <div class="grid-angka">
-        <div class="kartu">
-            <div class="redup kecil">Status layanan</div>
-            <div class="angka">{{ $layananBuka ? 'Dibuka' : 'Ditutup' }}</div>
-            @can('pengaturan.umum')
-                <a class="kecil" href="{{ route('kelola.pengaturan.layanan') }}">Ubah</a>
-            @endcan
+
+    <section class="mb-8">
+        <h2 class="flex items-center gap-2"><x-ikon nama="susun" class="size-5 text-utama" /> Sistem</h2>
+        <div class="grid grid-cols-2 gap-3 md:grid-cols-3 2xl:grid-cols-5">
+            <x-angka label="Status layanan" :nilai="$layananBuka ? 'Dibuka' : 'Ditutup'" ikon="perisai" :warna="$layananBuka ? 'sukses' : 'waspada'">
+                @can('pengaturan.umum')<a href="{{ route('kelola.pengaturan.layanan') }}">Ubah</a>@endcan
+            </x-angka>
+            <x-angka label="Anggota terdaftar" :nilai="number_format($jumlahAnggota, 0, ',', '.')" ikon="kelompok" />
+            <x-angka label="Aktif 30 hari terakhir" :nilai="number_format($aktif30Hari, 0, ',', '.')" ikon="grafik" warna="aksen" />
+            <x-angka label="Pengiriman surel" :nilai="$surelSiap ? 'Aktif' : 'Belum'" ikon="surel" :warna="$surelSiap ? 'sukses' : 'netral'">
+                @can('pengaturan.surel')<a href="{{ route('kelola.pengaturan.surel') }}">Atur</a>@endcan
+            </x-angka>
+            <x-angka label="Notifikasi WhatsApp" :nilai="$whatsappSiap ? 'Aktif' : 'Belum'" ikon="telepon" :warna="$whatsappSiap ? 'sukses' : 'netral'">
+                @can('pengaturan.whatsapp')<a href="{{ route('kelola.pengaturan.whatsapp') }}">Atur</a>@endcan
+            </x-angka>
         </div>
-        <div class="kartu">
-            <div class="redup kecil">Anggota terdaftar</div>
-            <div class="angka">{{ number_format($jumlahAnggota, 0, ',', '.') }}</div>
-        </div>
-        <div class="kartu">
-            <div class="redup kecil">Aktif 30 hari terakhir</div>
-            <div class="angka">{{ number_format($aktif30Hari, 0, ',', '.') }}</div>
-        </div>
-        <div class="kartu">
-            <div class="redup kecil">Pengiriman surel</div>
-            <div class="angka">{{ $surelSiap ? 'Aktif' : 'Belum' }}</div>
-            @can('pengaturan.surel')
-                <a class="kecil" href="{{ route('kelola.pengaturan.surel') }}">Atur</a>
-            @endcan
-        </div>
-        <div class="kartu">
-            <div class="redup kecil">Notifikasi WhatsApp</div>
-            <div class="angka">{{ $whatsappSiap ? 'Aktif' : 'Belum' }}</div>
-            @can('pengaturan.whatsapp')
-                <a class="kecil" href="{{ route('kelola.pengaturan.whatsapp') }}">Atur</a>
-            @endcan
-        </div>
-    </div>
+    </section>
 
     <div class="dua-kolom">
         <section class="kartu">

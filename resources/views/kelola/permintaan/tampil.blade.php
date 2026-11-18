@@ -12,7 +12,7 @@
 
         <div class="dua-kolom">
             <div>
-                <p style="margin-bottom: 6px"><strong>Konselor pendamping (PIC)</strong></p>
+                <p class="mb-1.5"><strong>Konselor pendamping (PIC)</strong></p>
                 <p>{{ $permintaan->konselor?->nama ?? 'Belum ditugaskan' }}
                     @if ($permintaan->konselor && $permintaan->kampusSama($permintaan->konselor))
                         <span class="lencana peringatan">Sekampus</span>
@@ -40,15 +40,15 @@
                             @if ($permintaan->gender_konselor !== 'bebas')
                                 <p class="bantuan">Preferensi anggota: konselor {{ $permintaan->gender_konselor }}.</p>
                             @endif
-                            <button type="submit" class="tombol ringkas" style="margin-top: 8px">Tugaskan</button>
+                            <button type="submit" class="tombol ringkas mt-2">Tugaskan</button>
                         </form>
                     @endif
                 @endif
             </div>
 
             <div>
-                <p style="margin-bottom: 6px"><strong>Status</strong></p>
-                <div class="baris-aksi" style="margin-bottom: 10px">
+                <p class="mb-1.5"><strong>Status</strong></p>
+                <div class="baris-aksi mb-2.5">
                     @if ($status === StatusPermintaan::Diajukan)
                         <form method="POST" action="{{ route('kelola.permintaan.tinjau', $permintaan) }}">
                             @csrf
@@ -65,11 +65,11 @@
                 @if (in_array($status, [StatusPermintaan::Diajukan, StatusPermintaan::Ditinjau], true))
                     <details @if ($errors->has('alasan')) open @endif>
                         <summary class="kecil">Tidak dapat dilayani…</summary>
-                        <form method="POST" action="{{ route('kelola.permintaan.tolak', $permintaan) }}" style="margin-top: 8px" onsubmit="return confirm('Tutup permintaan ini? Anggota akan menerima penjelasan Anda.')">
+                        <form class="mt-2" method="POST" action="{{ route('kelola.permintaan.tolak', $permintaan) }}" onsubmit="return confirm('Tutup permintaan ini? Anggota akan menerima penjelasan Anda.')">
                             @csrf
                             <label for="alasan-tolak" class="kecil">Penjelasan dan saran untuk anggota</label>
                             <textarea id="alasan-tolak" name="alasan" rows="3" maxlength="3000" required>{{ old('alasan') }}</textarea>
-                            <button type="submit" class="tombol bahaya ringkas" style="margin-top: 6px">Tutup permintaan</button>
+                            <button type="submit" class="tombol bahaya ringkas mt-1.5">Tutup permintaan</button>
                         </form>
                     </details>
                 @endif
@@ -79,11 +79,11 @@
             </div>
         </div>
 
-        <form method="POST" action="{{ route('kelola.permintaan.catatan', $permintaan) }}" style="margin-top: 12px">
+        <form class="mt-3" method="POST" action="{{ route('kelola.permintaan.catatan', $permintaan) }}">
             @csrf
             <label for="catatan_komite" class="kecil">Catatan internal komite (tidak terlihat anggota maupun konselor)</label>
             <textarea id="catatan_komite" name="catatan_komite" rows="2" maxlength="10000">{{ old('catatan_komite', $permintaan->catatan_komite) }}</textarea>
-            <button type="submit" class="tombol sekunder ringkas" style="margin-top: 6px">Simpan catatan</button>
+            <button type="submit" class="tombol sekunder ringkas mt-1.5">Simpan catatan</button>
         </form>
     </section>
 

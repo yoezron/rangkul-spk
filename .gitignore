@@ -14,7 +14,6 @@
 /.zed
 /auth.json
 /node_modules
-/public/build
 /public/fonts-manifest.dev.json
 /public/hot
 /public/storage
@@ -25,3 +24,6 @@ _ide_helper.php
 Homestead.json
 Homestead.yaml
 Thumbs.db
+
+# public/build SENGAJA ikut git: hosting (Hostinger) tidak menjalankan Node,
+# jadi hasil `npm run build` dikirim bersama kode. Jalankan build sebelum commit.
