@@ -3,9 +3,13 @@
 namespace App\Http\Controllers\Kelola;
 
 use App\Enums\Hak;
+use App\Enums\StatusPermintaan;
+use App\Enums\StatusPertemuan;
 use App\Http\Controllers\Controller;
 use App\Models\AuditLog;
 use App\Models\Peran;
+use App\Models\Permintaan;
+use App\Models\Pertemuan;
 use App\Models\User;
 use App\Services\KlienFonnte;
 use App\Services\PengaturanRangkul;
@@ -27,6 +31,14 @@ class DasborController extends Controller
             'layananBuka' => $pengaturan->layananBuka(),
             'surelSiap' => $pengaturan->surelSiap(),
             'whatsappSiap' => (new KlienFonnte($pengaturan))->siap(),
+            'layanan' => $request->user()->punyaHak(Hak::PermintaanKelola) ? [
+                'belumDitugaskan' => Permintaan::query()->whereIn('status', [StatusPermintaan::Diajukan->value, StatusPermintaan::Ditinjau->value])->count(),
+                'darurat' => Permintaan::query()->where('darurat', true)->whereNotIn('status', [StatusPermintaan::Draf->value, StatusPermintaan::Selesai->value, StatusPermintaan::Ditolak->value, StatusPermintaan::Dibatalkan->value])->count(),
+                'berlangsung' => Permintaan::query()->where('status', StatusPermintaan::Berlangsung->value)->count(),
+                'menungguPersetujuan' => Permintaan::query()->where('status', StatusPermintaan::MenungguPenutupan->value)->count()
+                    + Pertemuan::query()->where('status', StatusPertemuan::MenungguKomite->value)->count(),
+                'selesaiBulanIni' => Permintaan::query()->where('status', StatusPermintaan::Selesai->value)->where('selesai_pada', '>=', now()->startOfMonth())->count(),
+            ] : null,
             'jumlahAnggota' => User::query()->count(),
             'aktif30Hari' => User::query()->where('disinkronkan_pada', '>=', now()->subDays(30))->count(),
             'jumlahSuperadmin' => $peranSuperadmin === '' ? 0 : User::query()->whereRaw('LOWER(TRIM(peran)) = ?', [$peranSuperadmin])->count(),

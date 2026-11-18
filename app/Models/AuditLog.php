@@ -32,6 +32,16 @@ class AuditLog extends Model
         'penugasan.dicabut' => 'Peran dicabut',
         'pengguna.ditambahkan' => 'Anggota ditambahkan dari spk.or.id',
         'rekap.diunduh' => 'Rekap diunduh',
+        'permintaan.dibuka' => 'Permintaan dibuka komite',
+        'permintaan.ditinjau' => 'Permintaan ditandai ditinjau',
+        'permintaan.ditugaskan' => 'Konselor pendamping ditugaskan',
+        'permintaan.ditolak' => 'Permintaan tidak dapat dilayani',
+        'permintaan.darurat' => 'Tanda darurat diubah',
+        'pertemuan.diputuskan' => 'Pertemuan daring pertama diputuskan',
+        'penutupan.diputuskan' => 'Penutupan konsultasi diputuskan',
+        'instrumen.dibuat' => 'Instrumen asesmen dibuat',
+        'instrumen.diubah' => 'Instrumen asesmen diubah',
+        'instrumen.dihapus' => 'Instrumen asesmen dihapus',
         'audit.dipangkas' => 'Audit log dipangkas',
     ];
 

@@ -6,9 +6,12 @@ use App\Enums\Hak;
 use App\Services\Spk\JawabanAnggota;
 use Database\Factories\UserFactory;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Foundation\Auth\User as Authenticatable;
+use Illuminate\Notifications\Notifiable;
 use Illuminate\Support\Carbon;
 
 /**
@@ -29,12 +32,15 @@ use Illuminate\Support\Carbon;
  * @property string|null $nomor_anggota
  * @property string|null $foto
  * @property Carbon|null $disinkronkan_pada
+ * @property bool $notif_surel
+ * @property bool $notif_whatsapp
+ * @property string|null $nomor_whatsapp nomor pilihan anggota; bila kosong dipakai `telp` dari spk.or.id
  */
-#[Fillable(['spk_id', 'nama', 'email', 'telp', 'gender', 'kampus', 'wilayah', 'peran', 'nomor_anggota', 'foto', 'disinkronkan_pada'])]
+#[Fillable(['spk_id', 'nama', 'email', 'telp', 'gender', 'kampus', 'wilayah', 'peran', 'nomor_anggota', 'foto', 'disinkronkan_pada', 'notif_surel', 'notif_whatsapp', 'nomor_whatsapp'])]
 class User extends Authenticatable
 {
     /** @use HasFactory<UserFactory> */
-    use HasFactory;
+    use HasFactory, Notifiable;
 
     /**
      * Fitur "ingat saya" dimatikan: tabel ini tidak punya kolom remember_token.
@@ -42,6 +48,17 @@ class User extends Authenticatable
      * @var string
      */
     protected $rememberTokenName = '';
+
+    /**
+     * Sama dengan bawaan kolomnya, supaya pengguna yang baru dibuat di memori
+     * (mis. saat masuk pertama) langsung dapat menerima notifikasi.
+     *
+     * @var array<string, mixed>
+     */
+    protected $attributes = [
+        'notif_surel' => true,
+        'notif_whatsapp' => true,
+    ];
 
     /**
      * Buat atau perbarui salinan lokal seorang anggota yang berhak.
@@ -106,6 +123,56 @@ class User extends Authenticatable
     }
 
     /**
+     * Pengguna yang memegang hak lewat peran Rangkul yang ditugaskan.
+     *
+     * Superadmin sengaja TIDAK ikut: mereka administrator spk.or.id yang
+     * jumlahnya bisa banyak dan bukan bagian tim layanan, sehingga tidak
+     * dikirimi notifikasi kasus kecuali juga diberi peran (mis. Komite).
+     *
+     * @param  Builder<self>  $kueri
+     */
+    public function scopePemegangPeranDenganHak(Builder $kueri, Hak $hak): void
+    {
+        $kueri->whereHas('daftarPeran', fn (Builder $peran) => $peran->whereJsonContains('hak', $hak->value));
+    }
+
+    /**
+     * @return HasMany<Permintaan, $this>
+     */
+    public function permintaan(): HasMany
+    {
+        return $this->hasMany(Permintaan::class);
+    }
+
+    /**
+     * @return HasMany<Permintaan, $this>
+     */
+    public function kasusDampingan(): HasMany
+    {
+        return $this->hasMany(Permintaan::class, 'konselor_id');
+    }
+
+    public function routeNotificationForMail(): ?string
+    {
+        return $this->notif_surel && filled($this->email) ? $this->email : null;
+    }
+
+    public function routeNotificationForWhatsapp(): ?string
+    {
+        $nomor = $this->nomor_whatsapp ?: $this->telp;
+
+        return $this->notif_whatsapp && filled($nomor) ? $nomor : null;
+    }
+
+    /**
+     * Sapaan singkat untuk notifikasi: kata pertama nama.
+     */
+    public function namaPanggilan(): string
+    {
+        return strtok(trim($this->nama), ' ') ?: $this->nama;
+    }
+
+    /**
      * Get the attributes that should be cast.
      *
      * @return array<string, string>
@@ -115,6 +182,8 @@ class User extends Authenticatable
         return [
             'spk_id' => 'integer',
             'disinkronkan_pada' => 'datetime',
+            'notif_surel' => 'boolean',
+            'notif_whatsapp' => 'boolean',
         ];
     }
 }

@@ -24,7 +24,7 @@ a { color: var(--utama); }
 .tombol.lebar { display: block; width: 100%; }
 @media (prefers-color-scheme: dark) { .tombol { color: #10201f; } .tombol.sekunder { color: var(--teks); } .tombol.bahaya { color: var(--galat); } }
 label { display: block; font-weight: 600; font-size: .9375rem; margin: 0 0 4px; }
-input[type=text], input[type=email], input[type=number], input[type=password], input[type=search], select, textarea { width: 100%; padding: 9px 12px; border: 1px solid var(--garis); border-radius: 8px; background: var(--kartu); color: var(--teks); font: inherit; }
+input[type=text], input[type=email], input[type=number], input[type=password], input[type=search], input[type=url], input[type=datetime-local], select, textarea { width: 100%; padding: 9px 12px; border: 1px solid var(--garis); border-radius: 8px; background: var(--kartu); color: var(--teks); font: inherit; }
 textarea { resize: vertical; }
 .bidang { margin-bottom: 16px; }
 .bantuan { font-size: .8125rem; color: var(--redup); margin: 4px 0 0; }
@@ -41,3 +41,5 @@ th { font-size: .8125rem; color: var(--redup); font-weight: 600; }
 .lencana.peringatan { background: var(--peringatan-latar); border-color: var(--peringatan-garis); }
 .baris-aksi { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
 .baris-aksi form { margin: 0; }
+.dua-kolom { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 0 20px; }
+details > summary { cursor: pointer; }

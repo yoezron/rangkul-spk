@@ -1,4 +1,30 @@
 <x-kelola judul="Ringkasan" aktif="dasbor">
+    @if ($layanan)
+        <h2>Layanan konsultasi</h2>
+        <div class="grid-angka">
+            <a class="kartu" style="text-decoration: none; color: inherit" href="{{ route('kelola.permintaan.index', ['status' => 'darurat']) }}">
+                <div class="redup kecil">Darurat terbuka</div>
+                <div class="angka" @if ($layanan['darurat'] > 0) style="color: var(--galat)" @endif>{{ $layanan['darurat'] }}</div>
+            </a>
+            <a class="kartu" style="text-decoration: none; color: inherit" href="{{ route('kelola.permintaan.index', ['status' => 'belum_ditugaskan']) }}">
+                <div class="redup kecil">Belum ditugaskan</div>
+                <div class="angka">{{ $layanan['belumDitugaskan'] }}</div>
+            </a>
+            <a class="kartu" style="text-decoration: none; color: inherit" href="{{ route('kelola.permintaan.index', ['status' => 'berlangsung']) }}">
+                <div class="redup kecil">Pendampingan berlangsung</div>
+                <div class="angka">{{ $layanan['berlangsung'] }}</div>
+            </a>
+            <a class="kartu" style="text-decoration: none; color: inherit" href="{{ route('kelola.permintaan.index') }}">
+                <div class="redup kecil">Menunggu persetujuan komite</div>
+                <div class="angka">{{ $layanan['menungguPersetujuan'] }}</div>
+            </a>
+            <div class="kartu">
+                <div class="redup kecil">Selesai bulan ini</div>
+                <div class="angka">{{ $layanan['selesaiBulanIni'] }}</div>
+            </div>
+        </div>
+        <h2>Sistem</h2>
+    @endif
     <div class="grid-angka">
         <div class="kartu">
             <div class="redup kecil">Status layanan</div>

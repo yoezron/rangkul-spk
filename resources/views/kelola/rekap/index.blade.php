@@ -2,12 +2,9 @@
     <x-slot:keterangan>Berkas CSV yang dapat dibuka dengan Excel, LibreOffice, atau Google Sheets.</x-slot:keterangan>
 
     <div class="catatan" role="note">
-        Berkas rekap memuat data pribadi anggota. Simpan di tempat yang aman, jangan dibagikan lewat grup percakapan,
-        dan hapus bila tidak lagi diperlukan. Setiap unduhan tercatat di audit log.
-    </div>
-
-    <div class="catatan info" role="note">
-        Rekap record konseling akan tersedia di sini setelah fitur konseling dibangun.
+        Berkas rekap memuat data pribadi anggota — rekap permintaan dan percakapan memuat cerita, hasil asesmen, dan catatan konselor apa adanya.
+        Simpan di perangkat yang terkunci, jangan dibagikan lewat grup percakapan atau surel, dan hapus bila tidak lagi diperlukan.
+        Setiap unduhan tercatat di audit log.
     </div>
 
     @foreach ($jenis as $kunci => $keterangan)

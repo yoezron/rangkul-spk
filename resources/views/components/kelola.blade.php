@@ -2,6 +2,9 @@
 @php
     $menu = [
         ['dasbor', 'kelola.dasbor', 'Ringkasan', 'dasbor.lihat'],
+        ['permintaan', 'kelola.permintaan.index', 'Permintaan layanan', 'permintaan.kelola'],
+        ['kasus', 'konseling.index', 'Kasus pendampingan saya', 'konseling.tangani'],
+        ['instrumen', 'kelola.instrumen.index', 'Asesmen dasar', 'asesmen.kelola'],
         ['layanan', 'kelola.pengaturan.layanan', 'Layanan & audit log', 'pengaturan.umum'],
         ['halaman', 'kelola.pengaturan.halaman', 'Halaman depan & kontak', 'pengaturan.halaman'],
         ['surel', 'kelola.pengaturan.surel', 'Surel (Brevo)', 'pengaturan.surel'],
@@ -9,8 +12,14 @@
         ['pengguna', 'kelola.pengguna.index', 'Pengguna & penugasan', 'pengguna.lihat'],
         ['peran', 'kelola.peran.index', 'Peran & hak akses', 'peran.kelola'],
         ['audit', 'kelola.audit.index', 'Audit log', 'audit.lihat'],
-        ['rekap', 'kelola.rekap.index', 'Rekap & unduhan', 'rekap.unduh'],
+        ['rekap', 'kelola.rekap.index', 'Rekap & unduhan', ['rekap.unduh', 'permintaan.rekap']],
     ];
+    $pengguna = auth()->user();
+    $sebutan = match (true) {
+        $pengguna->adalahSuperadmin() => 'Superadmin',
+        $pengguna->can('dasbor.lihat') => 'Pengelola',
+        default => 'Peer konselor',
+    };
 @endphp
 <!DOCTYPE html>
 <html lang="id">
@@ -50,13 +59,13 @@
 <div class="kerangka">
     <nav class="sisi" aria-label="Menu pengelola">
         <p class="merek">SPK Rangkul<br><span class="redup kecil">
-            {{ auth()->user()->adalahSuperadmin() ? 'Superadmin' : 'Pengelola' }} · {{ auth()->user()->nama }}
+            {{ $sebutan }} · {{ $pengguna->nama }}
         </span></p>
         <ul>
             @foreach ($menu as [$kunci, $rute, $label, $hak])
-                @can($hak)
+                @canany((array) $hak)
                     <li><a href="{{ route($rute) }}" @if ($aktif === $kunci) aria-current="page" @endif>{{ $label }}</a></li>
-                @endcan
+                @endcanany
             @endforeach
         </ul>
         <div class="bawah baris-aksi">

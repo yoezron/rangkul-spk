@@ -21,6 +21,9 @@ enum Hak: string
     case PeranKelola = 'peran.kelola';
     case AuditLihat = 'audit.lihat';
     case RekapUnduh = 'rekap.unduh';
+    case PermintaanKelola = 'permintaan.kelola';
+    case PermintaanRekap = 'permintaan.rekap';
+    case AsesmenKelola = 'asesmen.kelola';
     case KonselingTangani = 'konseling.tangani';
 
     public function label(): string
@@ -36,7 +39,10 @@ enum Hak: string
             self::PeranKelola => 'Membuat dan mengubah peran beserta hak aksesnya',
             self::AuditLihat => 'Melihat audit log',
             self::RekapUnduh => 'Mengunduh rekap data',
-            self::KonselingTangani => 'Menangani permintaan konseling (berlaku saat fitur konseling tersedia)',
+            self::PermintaanKelola => 'Membaca semua permintaan layanan, menetapkan status, menugaskan konselor, dan menyetujui pertemuan serta penutupan',
+            self::PermintaanRekap => 'Mengunduh rekap lengkap permintaan layanan dan percakapan',
+            self::AsesmenKelola => 'Menyusun instrumen dan butir asesmen dasar',
+            self::KonselingTangani => 'Menjadi peer konselor: menangani permintaan yang ditugaskan kepadanya',
         };
     }
 
@@ -47,6 +53,7 @@ enum Hak: string
             self::PengaturanUmum, self::PengaturanHalaman, self::PengaturanSurel, self::PengaturanWhatsapp => 'Pengaturan',
             self::PenggunaLihat, self::PenggunaTugaskan, self::PeranKelola => 'Pengguna dan peran',
             self::AuditLihat, self::RekapUnduh => 'Catatan dan rekap',
+            self::PermintaanKelola, self::PermintaanRekap, self::AsesmenKelola => 'Komite layanan',
             self::KonselingTangani => 'Layanan',
         };
     }

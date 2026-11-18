@@ -2,8 +2,15 @@
 
 namespace App\Http\Controllers\Kelola;
 
+use App\Enums\Hak;
+use App\Enums\StatusPermintaan;
 use App\Http\Controllers\Controller;
 use App\Models\AuditLog;
+use App\Models\CatatanSesi;
+use App\Models\JawabanAsesmen;
+use App\Models\Permintaan;
+use App\Models\Pertemuan;
+use App\Models\Pesan;
 use App\Models\User;
 use App\Services\PencatatAudit;
 use Generator;
@@ -15,36 +22,55 @@ use Symfony\Component\HttpFoundation\StreamedResponse;
 /**
  * Unduhan rekap dalam bentuk CSV.
  *
- * Rekap record konseling belum ada karena fitur konselingnya belum dibangun;
- * jenis rekap baru cukup ditambahkan di JENIS dan baris().
+ * Rekap permintaan layanan dan percakapan memuat isi lengkap (cerita, skor
+ * asesmen, catatan sesi) sesuai keputusan pemilik proyek, dan hanya bagi
+ * pemegang hak permintaan.rekap. Rekap lain memerlukan hak rekap.unduh.
  *
  * Setiap unduhan tercatat di audit log sebelum berkasnya dikirim.
  */
 class RekapController extends Controller
 {
-    /** @var array<string, array{judul: string, keterangan: string}> */
+    /** @var array<string, array{judul: string, keterangan: string, hak: Hak}> */
     public const JENIS = [
+        'permintaan' => [
+            'judul' => 'Permintaan layanan (lengkap)',
+            'keterangan' => 'Satu baris per permintaan: identitas anggota, status, tanda darurat, topik, cerita, harapan, preferensi, skor asesmen, konselor, pertemuan, catatan sesi, rujukan, dan penutupan.',
+            'hak' => Hak::PermintaanRekap,
+        ],
+        'percakapan' => [
+            'judul' => 'Percakapan (lengkap)',
+            'keterangan' => 'Seluruh pesan antara anggota dan konselor, per permintaan, berikut catatan otomatis.',
+            'hak' => Hak::PermintaanRekap,
+        ],
         'anggota' => [
             'judul' => 'Anggota terdaftar',
             'keterangan' => 'Semua anggota yang pernah masuk atau ditambahkan ke Rangkul, dengan data dari spk.or.id dan peran Rangkul-nya.',
+            'hak' => Hak::RekapUnduh,
         ],
         'penugasan' => [
             'judul' => 'Penugasan peran',
             'keterangan' => 'Siapa memegang peran apa (peer konselor, administrator, dll.), siapa yang menugaskan, dan sejak kapan.',
+            'hak' => Hak::RekapUnduh,
         ],
         'audit' => [
             'judul' => 'Audit log',
             'keterangan' => 'Seluruh catatan tindakan pengelola yang masih tersimpan.',
+            'hak' => Hak::RekapUnduh,
         ],
     ];
 
     public function __construct(private readonly PencatatAudit $audit) {}
 
-    public function index(): View
+    public function index(Request $request): View
     {
+        $boleh = array_filter(self::JENIS, fn (array $jenis): bool => $request->user()->punyaHak($jenis['hak']));
+        abort_if($boleh === [], 403);
+
         return view('kelola.rekap.index', [
-            'jenis' => self::JENIS,
+            'jenis' => $boleh,
             'jumlah' => [
+                'permintaan' => Permintaan::query()->where('status', '!=', StatusPermintaan::Draf->value)->count(),
+                'percakapan' => Pesan::query()->count(),
                 'anggota' => User::query()->count(),
                 'penugasan' => DB::table('peran_user')->count(),
                 'audit' => AuditLog::query()->count(),
@@ -55,6 +81,7 @@ class RekapController extends Controller
     public function unduh(Request $request, string $jenis): StreamedResponse
     {
         abort_unless(array_key_exists($jenis, self::JENIS), 404);
+        abort_unless($request->user()->punyaHak(self::JENIS[$jenis]['hak']), 403);
 
         $pemisah = $request->query('pemisah') === 'titik_koma' ? ';' : ',';
 
@@ -84,6 +111,72 @@ class RekapController extends Controller
     private function baris(string $jenis): Generator
     {
         $waktu = fn ($tanggal): string => $tanggal?->format('Y-m-d H:i:s') ?? '';
+
+        if ($jenis === 'permintaan') {
+            yield [
+                'kode', 'status', 'darurat', 'alasan_darurat', 'diajukan_pada', 'id_akun_spk', 'nomor_anggota', 'nama', 'email', 'telp',
+                'gender', 'kampus', 'wilayah', 'jawaban_keselamatan', 'topik', 'topik_lainnya', 'uraian', 'harapan', 'bentuk_layanan',
+                'waktu_luang', 'minta_kampus_lain', 'preferensi_gender_konselor', 'asesmen', 'butir_kritis', 'konselor', 'ditugaskan_pada',
+                'jumlah_pesan', 'pertemuan', 'catatan_sesi', 'dirujuk_ke', 'alasan_penutupan', 'catatan_tinjauan_penutupan',
+                'alasan_penolakan', 'catatan_komite', 'selesai_pada',
+            ];
+
+            $kueri = Permintaan::query()
+                ->where('status', '!=', StatusPermintaan::Draf->value)
+                ->with(['anggota', 'konselor', 'jawabanAsesmen', 'pertemuan', 'catatanSesi'])
+                ->withCount(['pesan as jumlah_pesan' => fn ($pesan) => $pesan->where('jenis', 'pesan')])
+                ->orderBy('id');
+
+            foreach ($kueri->lazy(100) as $permintaan) {
+                $anggota = $permintaan->anggota;
+
+                yield [
+                    $permintaan->kode, $permintaan->status->label(), $permintaan->darurat ? 'ya' : 'tidak',
+                    implode(' | ', $permintaan->alasan_darurat ?? []), $waktu($permintaan->diajukan_pada),
+                    $anggota?->spk_id, $anggota?->nomor_anggota, $anggota?->nama, $anggota?->email, $anggota?->telp,
+                    $anggota?->gender, $anggota?->kampus, $anggota?->wilayah,
+                    collect($permintaan->keselamatan ?? [])->map(fn (string $nilai, string $kunci): string => $kunci.'='.$nilai)->implode('; '),
+                    implode('; ', $permintaan->labelTopik()), $permintaan->topik_lainnya, $permintaan->uraian, $permintaan->harapan,
+                    Permintaan::BENTUK_LAYANAN[$permintaan->bentuk_layanan] ?? $permintaan->bentuk_layanan, $permintaan->waktu_luang,
+                    $permintaan->hindari_kampus_sama ? 'ya' : 'tidak', $permintaan->gender_konselor,
+                    $permintaan->jawabanAsesmen->map(fn (JawabanAsesmen $jawaban): string => $jawaban->ringkasan())->implode(' | '),
+                    $permintaan->jawabanAsesmen->flatMap(fn (JawabanAsesmen $jawaban): array => array_map(fn (string $butir): string => $jawaban->nama_instrumen.': '.$butir, $jawaban->isian['kritis'] ?? []))->implode(' | '),
+                    $permintaan->konselor?->nama, $waktu($permintaan->ditugaskan_pada), $permintaan->jumlah_pesan,
+                    $permintaan->pertemuan->map(fn (Pertemuan $pertemuan): string => $pertemuan->mulai_pada->format('Y-m-d H:i').' ('.$pertemuan->status->label().')')->implode(' | '),
+                    $permintaan->catatanSesi->reverse()->map(fn (CatatanSesi $catatan): string => '['.$catatan->created_at->format('Y-m-d').'] Rangkuman: '.$catatan->rangkuman
+                        .($catatan->analisis ? ' — Analisis: '.$catatan->analisis : '')
+                        .($catatan->saran ? ' — Saran: '.$catatan->saran : ''))->implode(' | '),
+                    $permintaan->catatanSesi->where('rujukan', true)->pluck('rujukan_ke')->implode(' | '),
+                    $permintaan->alasan_penutupan, $permintaan->catatan_tinjauan_penutupan, $permintaan->alasan_penolakan,
+                    $permintaan->catatan_komite, $waktu($permintaan->selesai_pada),
+                ];
+            }
+
+            return;
+        }
+
+        if ($jenis === 'percakapan') {
+            yield ['kode', 'waktu', 'pengirim', 'sebagai', 'isi', 'dibaca_pada'];
+
+            $kueri = Pesan::query()->with(['permintaan:id,kode,user_id,konselor_id', 'pengirim:id,nama'])->orderBy('permintaan_id')->orderBy('id');
+
+            foreach ($kueri->lazy(500) as $pesan) {
+                yield [
+                    $pesan->permintaan?->kode,
+                    $waktu($pesan->created_at),
+                    $pesan->jenis === 'sistem' ? 'SPK Rangkul' : $pesan->pengirim?->nama,
+                    match (true) {
+                        $pesan->jenis === 'sistem' => 'sistem',
+                        $pesan->pengirim_id === $pesan->permintaan?->user_id => 'anggota',
+                        default => 'konselor',
+                    },
+                    $pesan->isi,
+                    $waktu($pesan->dibaca_pada),
+                ];
+            }
+
+            return;
+        }
 
         if ($jenis === 'anggota') {
             yield ['id_akun_spk', 'nomor_anggota', 'nama', 'email', 'telp', 'gender', 'kampus', 'wilayah', 'peran_spk', 'peran_rangkul', 'terdaftar_di_rangkul', 'terakhir_disinkronkan'];
