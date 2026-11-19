@@ -1,4 +1,4 @@
-@props(['judul' => null, 'kelasBody' => ''])
+@props(['judul' => null, 'kelasBody' => '', 'indeks' => false, 'deskripsi' => null])
 {{--
     Kerangka dokumen HTML. Semua gaya berasal dari Tailwind yang dibangun Vite
     dan disajikan dari server sendiri — tidak ada fonta, skrip, atau gambar
@@ -10,7 +10,10 @@
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <meta name="robots" content="noindex, nofollow">
+    <meta name="robots" content="{{ $indeks ? 'index, follow' : 'noindex, nofollow' }}">
+    @if ($deskripsi)
+        <meta name="description" content="{{ $deskripsi }}">
+    @endif
     <meta name="color-scheme" content="light dark">
     <meta name="theme-color" content="#1f6f6b">
     <title>{{ $judul ? $judul.' — ' : '' }}SPK Rangkul</title>

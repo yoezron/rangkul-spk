@@ -26,6 +26,13 @@ use Throwable;
  */
 class PengaturanController extends Controller
 {
+    /** @var array<string, string> */
+    private const NAMA_DAFTAR = [
+        'halaman_keunggulan' => 'Keunggulan',
+        'halaman_langkah' => 'Cara kerja',
+        'halaman_faq' => 'Tanya jawab',
+    ];
+
     public function __construct(
         private readonly PengaturanRangkul $pengaturan,
         private readonly PencatatAudit $audit,
@@ -57,8 +64,25 @@ class PengaturanController extends Controller
     {
         $data = $request->validate([
             'halaman_judul' => ['required', 'string', 'max:120'],
+            'halaman_label' => ['nullable', 'string', 'max:60'],
+            'halaman_tajuk' => ['nullable', 'string', 'max:160'],
             'halaman_subjudul' => ['nullable', 'string', 'max:255'],
+            'halaman_teks_tombol' => ['nullable', 'string', 'max:40'],
+            'halaman_judul_tentang' => ['nullable', 'string', 'max:80'],
             'halaman_isi' => ['nullable', 'string', 'max:5000'],
+            'halaman_tampil_keunggulan' => ['nullable', 'boolean'],
+            'halaman_keunggulan' => ['nullable', 'array', 'max:12'],
+            'halaman_keunggulan.*.judul' => ['nullable', 'string', 'max:80'],
+            'halaman_keunggulan.*.teks' => ['nullable', 'string', 'max:300'],
+            'halaman_tampil_langkah' => ['nullable', 'boolean'],
+            'halaman_langkah' => ['nullable', 'array', 'max:12'],
+            'halaman_langkah.*.judul' => ['nullable', 'string', 'max:80'],
+            'halaman_langkah.*.teks' => ['nullable', 'string', 'max:300'],
+            'halaman_tampil_faq' => ['nullable', 'boolean'],
+            'halaman_faq' => ['nullable', 'array', 'max:20'],
+            'halaman_faq.*.pertanyaan' => ['nullable', 'string', 'max:200'],
+            'halaman_faq.*.jawaban' => ['nullable', 'string', 'max:1000'],
+            'halaman_indeks' => ['nullable', 'boolean'],
             'kontak_email' => ['nullable', 'email', 'max:255'],
             'kontak_whatsapp' => ['nullable', 'string', 'max:30', 'regex:/^\+?[0-9 ()-]{6,30}$/'],
             'kontak_jam_layanan' => ['nullable', 'string', 'max:255'],
@@ -66,6 +90,23 @@ class PengaturanController extends Controller
         ], [
             'kontak_whatsapp.regex' => 'Nomor WhatsApp hanya boleh berisi angka, spasi, tanda kurung, tanda hubung, dan + di depan.',
         ]);
+
+        // Baris kosong dibuang; yang tersisa harus lengkap supaya tidak tampil setengah jadi.
+        foreach (['halaman_keunggulan' => ['judul', 'teks'], 'halaman_langkah' => ['judul', 'teks'], 'halaman_faq' => ['pertanyaan', 'jawaban']] as $bidang => $kolom) {
+            if (! array_key_exists($bidang, $data)) {
+                continue;
+            }
+
+            $data[$bidang] = array_values(array_filter($data[$bidang] ?? [], fn (array $baris): bool => collect($kolom)->contains(fn (string $nama): bool => filled($baris[$nama] ?? null))));
+
+            foreach ($data[$bidang] as $nomor => $baris) {
+                foreach ($kolom as $nama) {
+                    if (blank($baris[$nama] ?? null)) {
+                        return back()->withInput()->withErrors([$bidang => 'Baris '.($nomor + 1).' pada bagian '.self::NAMA_DAFTAR[$bidang].' belum lengkap: isi '.$nama.'-nya atau kosongkan barisnya.']);
+                    }
+                }
+            }
+        }
 
         return $this->simpan($data, 'halaman', 'kelola.pengaturan.halaman');
     }

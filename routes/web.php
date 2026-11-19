@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\Anggota\PermintaanController as PermintaanAnggotaController;
 use App\Http\Controllers\BerandaController;
+use App\Http\Controllers\DepanController;
 use App\Http\Controllers\Kasus\CatatanSesiController;
 use App\Http\Controllers\Kasus\PenutupanController;
 use App\Http\Controllers\Kasus\PercakapanController;
@@ -25,12 +26,13 @@ use Illuminate\Support\Facades\Route;
 | anggota hanya masuk lewat token SSO dari spk.or.id.
 */
 
+Route::get('/', DepanController::class)->name('depan');
 Route::get('/masuk', [MasukController::class, 'tampil'])->middleware('guest')->name('masuk');
 Route::get('/sso/spk', SsoSpkController::class)->name('sso.spk');
 Route::post('/keluar', [MasukController::class, 'keluar'])->middleware('auth')->name('keluar');
 
 Route::middleware(['auth', PeriksaUlangAnggota::class])->group(function () {
-    Route::get('/', BerandaController::class)->name('beranda');
+    Route::get('/beranda', BerandaController::class)->name('beranda');
 
     /*
     | Anggota: pengajuan dan permintaannya sendiri (diperiksa PermintaanPolicy).

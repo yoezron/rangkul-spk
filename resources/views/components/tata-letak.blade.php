@@ -12,7 +12,7 @@
     <div class="flex min-h-screen flex-col">
         <header class="sticky top-0 z-30 border-b border-garis/80 bg-latar/85 backdrop-blur-md">
             <div class="mx-auto flex max-w-5xl items-center justify-between gap-3 px-4 py-3 sm:px-6">
-                <a href="{{ auth()->check() ? route('beranda') : route('masuk') }}" class="flex items-center gap-2.5 text-teks no-underline hover:no-underline">
+                <a href="{{ auth()->check() ? route('beranda') : route('depan') }}" class="flex items-center gap-2.5 text-teks no-underline hover:no-underline">
                     <x-logo class="size-8" />
                     <span class="leading-tight">
                         <span class="block text-[15px] font-bold">SPK Rangkul</span>
