@@ -31,6 +31,22 @@
     --c-sukses: #1e7a46;
     --c-sukses-lembut: #e5f4ea;
     --c-teks-tombol: #ffffff;
+
+    /* Grafik — divalidasi dengan validator dataviz terhadap permukaan #ffffff / #1b1f1e. */
+    --c-seri-1: #2a78d6;
+    --c-seri-2: #eb6834;
+    --c-ordinal-1: #86b6ef;
+    --c-ordinal-2: #5598e7;
+    --c-ordinal-3: #2a78d6;
+    --c-ordinal-4: #1c5cab;
+    --c-ordinal-5: #104281;
+    --c-ordinal-teks-1: #0b0b0b;
+    --c-ordinal-teks-2: #0b0b0b;
+    --c-ordinal-teks-3: #ffffff;
+    --c-ordinal-teks-4: #ffffff;
+    --c-ordinal-teks-5: #ffffff;
+    --c-kisi: #eee9e1;
+    --c-dasar: #c9c2b6;
 }
 
 @media (prefers-color-scheme: dark) {
@@ -56,6 +72,22 @@
         --c-sukses: #7fd3a0;
         --c-sukses-lembut: #1f3628;
         --c-teks-tombol: #0f1d1c;
+
+        /* Mode gelap: tingkat yang lebih berat dibuat lebih terang supaya menonjol di latar gelap. */
+        --c-seri-1: #3987e5;
+        --c-seri-2: #d95926;
+        --c-ordinal-1: #184f95;
+        --c-ordinal-2: #256abf;
+        --c-ordinal-3: #3987e5;
+        --c-ordinal-4: #6da7ec;
+        --c-ordinal-5: #9ec5f4;
+        --c-ordinal-teks-1: #ffffff;
+        --c-ordinal-teks-2: #ffffff;
+        --c-ordinal-teks-3: #ffffff;
+        --c-ordinal-teks-4: #0b0b0b;
+        --c-ordinal-teks-5: #0b0b0b;
+        --c-kisi: #2a302e;
+        --c-dasar: #3d4542;
     }
 }
 
