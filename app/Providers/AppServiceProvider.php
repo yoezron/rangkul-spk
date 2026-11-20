@@ -7,6 +7,7 @@ use App\Models\User;
 use App\Services\PengaturanRangkul;
 use Illuminate\Database\QueryException;
 use Illuminate\Support\Facades\Gate;
+use Illuminate\Support\Facades\URL;
 use Illuminate\Support\ServiceProvider;
 
 class AppServiceProvider extends ServiceProvider
@@ -24,6 +25,13 @@ class AppServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
+        // Di produksi semua tautan yang dibuat aplikasi (alamat SSO, tautan di
+        // surel/WhatsApp, formulir) selalu https, walaupun hosting meneruskan
+        // permintaan ke PHP lewat proxy berprotokol http.
+        if ($this->app->isProduction()) {
+            URL::forceScheme('https');
+        }
+
         // Satu gate per hak akses, dipakai lewat middleware `can:<hak>` dan @can.
         foreach (Hak::cases() as $hak) {
             Gate::define($hak->value, fn (User $pengguna): bool => $pengguna->punyaHak($hak));

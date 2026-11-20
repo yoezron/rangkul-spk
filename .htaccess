@@ -1,0 +1,30 @@
+# ---------------------------------------------------------------------------
+# Pengaman bila SELURUH repo dipasang langsung di folder web (public_html),
+# seperti deploy GitHub Hostinger untuk rangkul.spk.or.id.
+#
+# Hanya folder public/ yang boleh dilayani. Semua permintaan diarahkan ke
+# public/, sehingga .env, storage/, vendor/, config/, database/, dan berkas
+# lain di akar repo tidak pernah dapat dibuka atau dijalankan dari web.
+# ---------------------------------------------------------------------------
+
+Options -Indexes
+
+<IfModule mod_rewrite.c>
+    RewriteEngine On
+
+    # Permintaan yang sudah menuju public/ dibiarkan (dipakai juga di Laragon:
+    # http://localhost/rangkul-spk/public/…).
+    RewriteRule ^public(/|$) - [L]
+
+    # Selain itu, semuanya dilayani dari public/.
+    RewriteRule ^(.*)$ public/$1 [L]
+</IfModule>
+
+# Lapis kedua, bila aturan di atas tidak berjalan: tolak berkas dan folder
+# aplikasi yang tidak boleh terbuka.
+<IfModule mod_alias.c>
+    RedirectMatch 404 /\.(?!well-known/)
+    RedirectMatch 404 \.(env|log|sqlite|sqlite3|sql|gz|md|lock|xml|yml|yaml|sh|bak)$
+    RedirectMatch 404 /(composer|package|package-lock|boost|phpunit|vite\.config|artisan)(\.[a-z]+)?$
+    RedirectMatch 404 ^/(app|bootstrap|config|database|lang|resources|routes|storage|tests|vendor|node_modules)(/|$)
+</IfModule>
