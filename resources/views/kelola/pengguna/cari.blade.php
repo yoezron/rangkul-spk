@@ -19,7 +19,7 @@
             <div class="rounded-2xl border border-dashed border-garis p-8 text-center">
                 <x-ikon nama="kelompok" class="mx-auto mb-2 size-8 text-redup" />
                 <p class="m-0 font-semibold">Tidak ada anggota terkonfirmasi dengan nama "{{ $nama }}".</p>
-                <p class="m-0 text-sm text-redup">Periksa ejaannya, atau coba sebagian nama saja. Calon Anggota dan akun nonaktif memang tidak ditampilkan.</p>
+                <p class="m-0 text-sm text-redup">Periksa ejaannya, atau coba sebagian nama saja. Calon Anggota, akun nonaktif, dan akun yang masih diwajibkan mengganti password di spk.or.id memang tidak ditampilkan — anggota itu perlu login ke spk.or.id dan mengganti passwordnya lebih dulu.</p>
             </div>
         @else
             <p class="mb-3 text-sm text-redup">{{ count($hasil) }} anggota ditemukan{{ count($hasil) >= 20 ? ' (20 teratas — perjelas nama bila belum ketemu)' : '' }}.</p>
