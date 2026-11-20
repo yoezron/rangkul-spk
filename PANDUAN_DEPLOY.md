@@ -295,10 +295,19 @@ Tanpa cron, **notifikasi surel/WhatsApp tidak pernah terkirim** (semuanya masuk 
 hPanel → **Advanced → Cron Jobs** → *Custom*, tiap menit (`* * * * *`). Ganti `u123456789`:
 
 ```bash
-cd /home/u123456789/domains/rangkul.spk.or.id/public_html && /opt/alt/php84/usr/bin/php artisan schedule:run >> /dev/null 2>&1
+/opt/alt/php84/usr/bin/php /home/u123456789/domains/rangkul.spk.or.id/public_html/artisan schedule:run >> /dev/null 2>&1
 ```
 
-Cron harus memakai biner `/opt/alt/php84/...`, bukan `php` polos yang mengikuti versi paket.
+- Pakai biner `/opt/alt/php84/...`, bukan `php` polos yang mengikuti versi paket.
+- Tulis jalur lengkap ke `artisan` **tanpa awalan `cd … &&`**. Cron hPanel berbentuk `cd … && php artisan …`
+  terbukti tidak pernah menjalankan penjadwal (antrean menumpuk), walaupun perintah yang sama berhasil dari SSH.
+  Laravel tidak membutuhkan `cd`: penjadwal menjalankan tugasnya dari folder aplikasi.
+- `crontab -l` di SSH menampilkan *no crontab*: itu wajar, cron hPanel disimpan di tempat lain.
+
+**Memastikan cron benar-benar berjalan.** Untuk sementara ganti `>> /dev/null 2>&1` dengan
+`>> /home/u123456789/cron-rangkul.log 2>&1`. Dua menit kemudian *Lihat Output* di hPanel atau
+`tail -5 ~/cron-rangkul.log` harus berisi *Running ['artisan' queue:work …] DONE* setiap menit. Setelah
+terbukti, kembalikan ke `/dev/null` dan hapus lognya.
 
 | Tugas terjadwal | Kapan |
 |---|---|
@@ -311,6 +320,7 @@ Periksa beberapa menit kemudian:
 ```bash
 $PHP artisan schedule:list
 $PHP artisan queue:failed
+$PHP artisan tinker --execute 'echo DB::table("jobs")->count(), " menunggu", PHP_EOL;'   # harus 0 atau mendekati 0
 ```
 
 ---
