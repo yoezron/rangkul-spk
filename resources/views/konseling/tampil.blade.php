@@ -11,6 +11,8 @@
         'keterangan' => 'Mulailah dengan menyapa dan mendengarkan. Tim komite dapat memantau percakapan ini.',
     ])
 
+    @include('partials.kasus.instrumen', ['permintaan' => $permintaan, 'peran' => 'konselor', 'daftarInstrumen' => $daftarInstrumen])
+
     @include('partials.kasus.pertemuan', ['permintaan' => $permintaan, 'peran' => 'konselor'])
 
     @include('partials.kasus.catatan-sesi', ['permintaan' => $permintaan, 'bolehTulis' => auth()->user()->can('catat', $permintaan)])

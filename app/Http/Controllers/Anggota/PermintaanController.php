@@ -155,10 +155,14 @@ class PermintaanController extends Controller
             return redirect()->route('permintaan.langkah', [$permintaan, $permintaan->langkah]);
         }
 
-        $permintaan->load(['konselor', 'pertemuan', 'jawabanAsesmen']);
+        $permintaan->load(['konselor', 'pertemuan', 'jawabanAsesmen', 'kirimanInstrumen']);
 
         return view('permintaan.tampil', [
             'permintaan' => $permintaan,
+            'adaPermintaanLain' => $request->user()->permintaan()
+                ->whereKeyNot($permintaan->id)
+                ->whereNotIn('status', [StatusPermintaan::Draf->value, StatusPermintaan::Selesai->value, StatusPermintaan::Ditolak->value, StatusPermintaan::Dibatalkan->value])
+                ->exists(),
             'kontak' => $this->pengaturan->kontak(),
             'baruDiajukan' => $request->session()->get('baru_diajukan') === true,
             'pertemuanTerjadwal' => $permintaan->pertemuan->filter(fn ($pertemuan): bool => $pertemuan->status === StatusPertemuan::Terjadwal),

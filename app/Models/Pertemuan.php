@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use App\Enums\StatusPertemuan;
+use App\Models\Concerns\PunyaKunciTautan;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -12,6 +13,7 @@ use Illuminate\Support\Carbon;
  * Pertemuan daring yang diusulkan konselor.
  *
  * @property int $id
+ * @property string $kunci_tautan kunci acak di URL, lihat PunyaKunciTautan
  * @property int $permintaan_id
  * @property int|null $diusulkan_oleh
  * @property Carbon $mulai_pada
@@ -26,6 +28,8 @@ use Illuminate\Support\Carbon;
 #[Fillable(['permintaan_id', 'diusulkan_oleh', 'mulai_pada', 'durasi_menit', 'tautan', 'catatan', 'status', 'disetujui_anggota_pada', 'disetujui_komite_pada', 'disetujui_komite_oleh', 'alasan_penolakan'])]
 class Pertemuan extends Model
 {
+    use PunyaKunciTautan;
+
     protected $table = 'pertemuan';
 
     /**

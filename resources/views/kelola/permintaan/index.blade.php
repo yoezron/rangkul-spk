@@ -9,6 +9,7 @@
                 <option value="terbuka" @selected($status === 'terbuka')>Semua yang masih berjalan</option>
                 <option value="belum_ditugaskan" @selected($status === 'belum_ditugaskan')>Belum ditugaskan konselor</option>
                 <option value="darurat" @selected($status === 'darurat')>Darurat</option>
+                <option value="menggantung" @selected($status === 'menggantung')>Tanpa aktivitas {{ \App\Models\Permintaan::JAM_MENGGANTUNG }} jam (menggantung)</option>
                 @foreach (StatusPermintaan::terlihatKomite() as $satu)
                     <option value="{{ $satu->value }}" @selected($status === $satu->value)>{{ $satu->label() }}</option>
                 @endforeach

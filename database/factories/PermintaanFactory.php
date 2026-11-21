@@ -74,6 +74,18 @@ class PermintaanFactory extends Factory
         ]);
     }
 
+    /**
+     * Pendampingan sudah ditutup (selesai) pada `$selesaiPada`.
+     */
+    public function selesai(?User $konselor = null, mixed $selesaiPada = null): static
+    {
+        return $this->berlangsung($konselor)->state(fn (array $attributes) => [
+            'status' => StatusPermintaan::Selesai,
+            'selesai_pada' => $selesaiPada ?? now(),
+            'penutupan_ditinjau_pada' => $selesaiPada ?? now(),
+        ]);
+    }
+
     public function darurat(): static
     {
         return $this->state(fn (array $attributes) => [

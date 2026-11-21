@@ -36,6 +36,11 @@
             const formulir = document.getElementById('formulir-pesan');
             let terakhir = 0;
             let sedangMuat = false;
+            // X-Requested-With menandai permintaan AJAX. Tanpanya Laravel menyimpan
+            // alamat polling JSON sebagai "halaman sebelumnya", sehingga formulir
+            // lain di halaman ini (catatan sesi, penutupan, dll.) yang kembali
+            // lewat back() malah menampilkan JSON.
+            const kepalaAjax = { Accept: 'application/json', 'X-Requested-With': 'XMLHttpRequest' };
 
             function tambah(pesan) {
                 wadah.querySelector('[data-kosong]')?.remove();
@@ -55,7 +60,7 @@
                 if (sedangMuat) return;
                 sedangMuat = true;
                 try {
-                    const jawaban = await fetch(wadah.dataset.url + '?setelah=' + terakhir, { headers: { Accept: 'application/json' }, credentials: 'same-origin' });
+                    const jawaban = await fetch(wadah.dataset.url + '?setelah=' + terakhir, { headers: kepalaAjax, credentials: 'same-origin' });
                     if (jawaban.status === 401 || jawaban.redirected) { window.location.reload(); return; }
                     if (!jawaban.ok) return;
                     const data = await jawaban.json();
@@ -85,7 +90,7 @@
                     const tombol = formulir.querySelector('button');
                     tombol.disabled = true;
                     try {
-                        const jawaban = await fetch(formulir.action, { method: 'POST', body: new FormData(formulir), headers: { Accept: 'application/json' }, credentials: 'same-origin' });
+                        const jawaban = await fetch(formulir.action, { method: 'POST', body: new FormData(formulir), headers: kepalaAjax, credentials: 'same-origin' });
                         if (jawaban.ok) { kotak.value = ''; await muat(); wadah.scrollTop = wadah.scrollHeight; }
                         else { formulir.submit(); }
                     } finally {

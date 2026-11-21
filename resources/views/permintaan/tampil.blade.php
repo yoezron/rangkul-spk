@@ -99,6 +99,39 @@
 
     @include('partials.kasus.penutupan', ['permintaan' => $permintaan, 'peran' => 'anggota'])
 
+    @unless ($status->terbuka())
+        <section class="kartu" id="lanjutan">
+            <h2>Masih membutuhkan pendampingan?</h2>
+            @if (auth()->user()->can('bukaKembali', $permintaan) && ! $adaPermintaanLain)
+                <p class="text-[15px] text-redup">Bila Anda ingin melanjutkan hal yang sama bersama {{ $permintaan->konselor?->nama ?? 'konselor yang sama' }}, buka kembali percakapan ini (sampai {{ $permintaan->batasBukaKembali()->translatedFormat('j F Y') }}). Untuk hal yang berbeda, ajukan permintaan baru.</p>
+                <details @if ($errors->has('alasan') || $errors->has('buka_kembali')) open @endif>
+                    <summary><strong>Buka kembali percakapan</strong></summary>
+                    <form method="POST" action="{{ route('penutupan.buka-kembali', $permintaan) }}" class="mt-2">
+                        @csrf
+                        <div class="bidang">
+                            <label for="alasan-buka">Apa yang ingin Anda lanjutkan?</label>
+                            <textarea id="alasan-buka" name="alasan" rows="3" maxlength="5000" required>{{ old('alasan') }}</textarea>
+                            <p class="bantuan">Tulisan ini menjadi pesan pertama Anda di percakapan, dan konselor diberi tahu lewat surel/WhatsApp.</p>
+                        </div>
+                        <button type="submit" class="tombol">Buka kembali</button>
+                    </form>
+                </details>
+            @elseif ($status === \App\Enums\StatusPermintaan::Selesai && $adaPermintaanLain)
+                <p class="text-[15px] text-redup">Anda sudah punya permintaan lain yang sedang berjalan. Lanjutkan percakapan di sana.</p>
+            @else
+                <p class="text-[15px] text-redup">Anda dapat mengajukan permintaan layanan baru kapan saja. Tim komite akan membacanya dan menugaskan peer konselor.</p>
+            @endif
+            @unless ($adaPermintaanLain)
+                <form method="POST" action="{{ route('permintaan.mulai') }}" class="mt-3">
+                    @csrf
+                    <button type="submit" class="tombol sekunder">Ajukan permintaan baru</button>
+                </form>
+            @endunless
+        </section>
+    @endunless
+
+    @include('partials.kasus.instrumen', ['permintaan' => $permintaan, 'peran' => 'anggota'])
+
     @if ($permintaan->konselor_id)
         @include('partials.kasus.percakapan', [
             'permintaan' => $permintaan,

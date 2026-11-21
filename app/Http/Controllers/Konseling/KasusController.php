@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Konseling;
 
 use App\Enums\StatusPermintaan;
 use App\Http\Controllers\Controller;
+use App\Models\Instrumen;
 use App\Models\Permintaan;
 use Illuminate\Contracts\View\View;
 use Illuminate\Database\Eloquent\Builder;
@@ -37,8 +38,11 @@ class KasusController extends Controller
     {
         Gate::authorize('dampingi', $permintaan);
 
-        $permintaan->load(['anggota', 'jawabanAsesmen', 'pertemuan', 'catatanSesi.penulis', 'catatanSesi.pertemuan']);
+        $permintaan->load(['anggota', 'jawabanAsesmen', 'kirimanInstrumen', 'pertemuan', 'catatanSesi.penulis', 'catatanSesi.pertemuan']);
 
-        return view('konseling.tampil', ['permintaan' => $permintaan]);
+        return view('konseling.tampil', [
+            'permintaan' => $permintaan,
+            'daftarInstrumen' => Instrumen::query()->orderBy('urutan')->orderBy('id')->get(['id', 'nama', 'aktif', 'butir']),
+        ]);
     }
 }

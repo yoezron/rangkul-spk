@@ -97,6 +97,7 @@
             'bolehKirim' => false,
             'keterangan' => 'Mode pantau: komite membaca tanpa ikut mengirim pesan, dan membaca di sini tidak menandai pesan sebagai terbaca.',
         ])
+        @include('partials.kasus.instrumen', ['permintaan' => $permintaan, 'peran' => 'komite'])
         @include('partials.kasus.pertemuan', ['permintaan' => $permintaan, 'peran' => 'komite'])
     @endif
 

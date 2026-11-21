@@ -10,6 +10,7 @@
             ['permintaan', 'kelola.permintaan.index', 'Permintaan layanan', 'permintaan.kelola', 'kotak-masuk'],
             ['kasus', 'konseling.index', 'Kasus pendampingan saya', 'konseling.tangani', 'chat'],
             ['instrumen', 'kelola.instrumen.index', 'Asesmen dasar', 'asesmen.kelola', 'klipboard'],
+            ['waktu-layanan', 'kelola.waktu-layanan.index', 'Waktu layanan konselor', 'waktu_layanan.rekap', 'jam'],
         ],
         'Pengaturan' => [
             ['layanan', 'kelola.pengaturan.layanan', 'Layanan & audit log', 'pengaturan.umum', 'susun'],

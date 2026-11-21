@@ -72,3 +72,26 @@
         @endif
     </section>
 @endif
+
+@if ($peran === 'komite' && $status === StatusPermintaan::Berlangsung && auth()->user()->can('kelola', $permintaan))
+    <section class="kartu" id="tutup-layanan">
+        <h2>Tutup layanan konsultasi</h2>
+        @if ($menggantung ?? false)
+            <div class="catatan">Tidak ada aktivitas percakapan maupun pertemuan lebih dari {{ \App\Models\Permintaan::JAM_MENGGANTUNG }} jam.</div>
+        @endif
+        <details @if ($errors->has('alasan') && old('_tutup')) open @endif>
+            <summary><strong>Tutup dan tandai selesai</strong></summary>
+            <p class="redup kecil mt-1.5">Untuk pendampingan yang sudah tuntas atau menggantung tanpa kabar. Tidak perlu usulan konselor maupun persetujuan anggota. Pertemuan yang belum berlangsung ikut dibatalkan. Anggota masih dapat membuka kembali dalam {{ \App\Models\Permintaan::HARI_BUKA_KEMBALI }} hari.</p>
+            <form method="POST" action="{{ route('penutupan.tutup', $permintaan) }}" onsubmit="return confirm('Tutup proses konsultasi ini dan tandai selesai? Anggota dan konselor akan diberi tahu.')">
+                @csrf
+                <input type="hidden" name="_tutup" value="1">
+                <div class="bidang">
+                    <label for="alasan-tutup">Alasan penutupan</label>
+                    <textarea id="alasan-tutup" name="alasan" rows="2" maxlength="2000" required>{{ old('_tutup') ? old('alasan') : '' }}</textarea>
+                    <p class="bantuan">Dibaca konselor dan komite, tidak ditampilkan ke anggota.</p>
+                </div>
+                <button type="submit" class="tombol bahaya">Tutup dan tandai selesai</button>
+            </form>
+        </details>
+    </section>
+@endif

@@ -5,6 +5,8 @@ namespace App\Http\Controllers\Kasus;
 use App\Http\Controllers\Controller;
 use App\Models\Permintaan;
 use App\Models\Pesan;
+use App\Services\PemberitahuLayanan;
+use App\Services\PencatatKehadiran;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -20,13 +22,23 @@ use Illuminate\Support\Facades\Gate;
  */
 class PercakapanController extends Controller
 {
-    public function daftar(Request $request, Permintaan $permintaan): JsonResponse
+    public function daftar(Request $request, Permintaan $permintaan, PencatatKehadiran $kehadiran): JsonResponse
     {
         Gate::authorize('lihat', $permintaan);
 
         $pengguna = $request->user();
         $setelah = max(0, (int) $request->query('setelah', 0));
-        $peserta = Gate::allows('milik', $permintaan) || Gate::allows('dampingi', $permintaan);
+        $sebagai = match (true) {
+            Gate::allows('milik', $permintaan) => 'anggota',
+            Gate::allows('dampingi', $permintaan) => 'konselor',
+            default => null,
+        };
+        $peserta = $sebagai !== null;
+
+        // Setiap polling peserta menjadi detak kehadiran untuk menghitung waktu layanan.
+        if ($peserta && $permintaan->status->bolehBercakap()) {
+            $kehadiran->detak($permintaan, $pengguna, $sebagai);
+        }
 
         $daftar = $permintaan->pesan()->with('pengirim')->where('id', '>', $setelah)->limit(200)->get();
 
@@ -56,17 +68,33 @@ class PercakapanController extends Controller
         ]);
     }
 
-    public function kirim(Request $request, Permintaan $permintaan): JsonResponse|RedirectResponse
+    /**
+     * Hanya pesan pertama tiap pihak yang langsung dikabarkan lewat WhatsApp;
+     * pesan berikutnya tidak, supaya percakapan yang sedang berjalan tidak
+     * membanjiri ponsel. Pesan yang lama tidak dibuka diingatkan oleh
+     * rangkul:ingatkan-pesan-tertunda.
+     */
+    public function kirim(Request $request, Permintaan $permintaan, PemberitahuLayanan $pemberitahu): JsonResponse|RedirectResponse
     {
         Gate::authorize('bercakap', $permintaan);
 
         $data = $request->validate(['isi' => ['required', 'string', 'max:5000']]);
+        $pengirim = $request->user();
+
+        $pesanPertama = ! $permintaan->pesan()
+            ->where('jenis', 'pesan')
+            ->where('pengirim_id', $pengirim->id)
+            ->exists();
 
         $permintaan->pesan()->create([
-            'pengirim_id' => $request->user()->id,
+            'pengirim_id' => $pengirim->id,
             'jenis' => 'pesan',
             'isi' => trim($data['isi']),
         ]);
+
+        if ($pesanPertama) {
+            $pemberitahu->pesanPertama($permintaan, $pengirim);
+        }
 
         if ($request->expectsJson()) {
             return response()->json(['ok' => true]);

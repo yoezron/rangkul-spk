@@ -18,9 +18,10 @@ use Illuminate\Support\Carbon;
  * @property string $isi
  * @property Carbon|null $dibaca_pada
  * @property Carbon|null $diingatkan_pada
+ * @property Carbon|null $diingatkan_whatsapp_pada
  * @property Carbon $created_at
  */
-#[Fillable(['permintaan_id', 'pengirim_id', 'jenis', 'isi', 'dibaca_pada', 'diingatkan_pada'])]
+#[Fillable(['permintaan_id', 'pengirim_id', 'jenis', 'isi', 'dibaca_pada', 'diingatkan_pada', 'diingatkan_whatsapp_pada'])]
 class Pesan extends Model
 {
     protected $table = 'pesan';
@@ -52,6 +53,7 @@ class Pesan extends Model
             'isi' => 'encrypted',
             'dibaca_pada' => 'datetime',
             'diingatkan_pada' => 'datetime',
+            'diingatkan_whatsapp_pada' => 'datetime',
         ];
     }
 }

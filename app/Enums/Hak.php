@@ -23,6 +23,7 @@ enum Hak: string
     case RekapUnduh = 'rekap.unduh';
     case PermintaanKelola = 'permintaan.kelola';
     case PermintaanRekap = 'permintaan.rekap';
+    case WaktuLayananRekap = 'waktu_layanan.rekap';
     case AsesmenKelola = 'asesmen.kelola';
     case KonselingTangani = 'konseling.tangani';
 
@@ -41,6 +42,7 @@ enum Hak: string
             self::RekapUnduh => 'Mengunduh rekap data',
             self::PermintaanKelola => 'Membaca semua permintaan layanan, menetapkan status, menugaskan konselor, dan menyetujui pertemuan serta penutupan',
             self::PermintaanRekap => 'Mengunduh rekap lengkap permintaan layanan dan percakapan',
+            self::WaktuLayananRekap => 'Melihat dan mengunduh rekap waktu layanan konselor per bulan (untuk pembayaran)',
             self::AsesmenKelola => 'Menyusun instrumen dan butir asesmen dasar',
             self::KonselingTangani => 'Menjadi peer konselor: menangani permintaan yang ditugaskan kepadanya',
         };
@@ -53,7 +55,7 @@ enum Hak: string
             self::PengaturanUmum, self::PengaturanHalaman, self::PengaturanSurel, self::PengaturanWhatsapp => 'Pengaturan',
             self::PenggunaLihat, self::PenggunaTugaskan, self::PeranKelola => 'Pengguna dan peran',
             self::AuditLihat, self::RekapUnduh => 'Catatan dan rekap',
-            self::PermintaanKelola, self::PermintaanRekap, self::AsesmenKelola => 'Komite layanan',
+            self::PermintaanKelola, self::PermintaanRekap, self::WaktuLayananRekap, self::AsesmenKelola => 'Komite layanan',
             self::KonselingTangani => 'Layanan',
         };
     }

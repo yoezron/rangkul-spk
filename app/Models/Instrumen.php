@@ -39,6 +39,14 @@ class Instrumen extends Model
     }
 
     /**
+     * @return HasMany<KirimanInstrumen, $this>
+     */
+    public function kiriman(): HasMany
+    {
+        return $this->hasMany(KirimanInstrumen::class);
+    }
+
+    /**
      * @param  Builder<self>  $kueri
      */
     public function scopeDipakai(Builder $kueri): void

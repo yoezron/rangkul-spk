@@ -7,7 +7,7 @@ use Illuminate\Support\Facades\Schedule;
 |   * * * * * cd /jalur/ke/rangkul && php artisan schedule:run >> /dev/null 2>&1
 |
 | Tanpa cron ini: notifikasi surel/WhatsApp tidak pernah terkirim (diantrekan),
-| pengingat 24 jam tidak berjalan, dan audit log tidak dipangkas.
+| pengingat 2 jam & 24 jam tidak berjalan, dan audit log tidak dipangkas.
 */
 
 // Notifikasi diantrekan supaya halaman tidak menunggu SMTP dan Fonnte. Di
@@ -17,6 +17,10 @@ Schedule::command('queue:work --stop-when-empty --max-time=50 --tries=1')
     ->everyMinute()
     ->withoutOverlapping(5);
 
+Schedule::command('rangkul:ingatkan-pesan-tertunda')->everyTenMinutes()->withoutOverlapping();
+
 Schedule::command('rangkul:ingatkan-pesan')->hourly()->withoutOverlapping();
+
+Schedule::command('rangkul:ingatkan-kasus-menggantung')->hourlyAt(15)->withoutOverlapping();
 
 Schedule::command('rangkul:pangkas-audit')->dailyAt('02:30');

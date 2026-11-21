@@ -4,8 +4,10 @@ namespace App\Models;
 
 use App\Enums\StatusPermintaan;
 use App\Enums\StatusPertemuan;
+use App\Models\Concerns\PunyaKunciTautan;
 use Database\Factories\PermintaanFactory;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -18,6 +20,7 @@ use Illuminate\Support\Carbon;
  * Isian anggota, catatan komite, dan alasan-alasan disimpan terenkripsi.
  *
  * @property int $id
+ * @property string $kunci_tautan kunci acak di URL, lihat PunyaKunciTautan
  * @property string|null $kode
  * @property int $user_id
  * @property StatusPermintaan $status
@@ -46,6 +49,10 @@ use Illuminate\Support\Carbon;
  * @property string|null $catatan_komite
  * @property Carbon|null $diajukan_pada
  * @property Carbon|null $selesai_pada
+ * @property Carbon|null $dibuka_kembali_pada
+ * @property Carbon|null $diingatkan_menggantung_pada
+ * @property-read string|null $aktivitas_pesan_pada  dari withMax, lihat aktivitasTerakhir()
+ * @property-read string|null $aktivitas_pertemuan_pada  dari withMax, lihat aktivitasTerakhir()
  * @property Carbon $created_at
  */
 #[Fillable([
@@ -54,12 +61,12 @@ use Illuminate\Support\Carbon;
     'gender_konselor', 'konselor_id', 'ditugaskan_pada', 'ditugaskan_oleh', 'daring_disetujui_pada',
     'daring_disetujui_oleh', 'penutupan_diusulkan_pada', 'alasan_penutupan', 'penutupan_disetujui_anggota_pada',
     'penutupan_ditinjau_pada', 'penutupan_ditinjau_oleh', 'catatan_tinjauan_penutupan', 'alasan_penolakan',
-    'catatan_komite', 'diajukan_pada', 'selesai_pada',
+    'catatan_komite', 'diajukan_pada', 'selesai_pada', 'dibuka_kembali_pada', 'diingatkan_menggantung_pada',
 ])]
 class Permintaan extends Model
 {
     /** @use HasFactory<PermintaanFactory> */
-    use HasFactory;
+    use HasFactory, PunyaKunciTautan;
 
     /** Pilihan "apa yang ingin didiskusikan". */
     public const TOPIK = [
@@ -115,6 +122,12 @@ class Permintaan extends Model
         5 => 'Preferensi layanan',
         6 => 'Tinjau & kirim',
     ];
+
+    /** Kasus selesai masih boleh dibuka kembali anggota selama sekian hari. */
+    public const HARI_BUKA_KEMBALI = 30;
+
+    /** Kasus berjalan tanpa aktivitas selama sekian jam dianggap menggantung. */
+    public const JAM_MENGGANTUNG = 48;
 
     protected $table = 'permintaan';
 
@@ -173,6 +186,69 @@ class Permintaan extends Model
     {
         $this->darurat = true;
         $this->alasan_darurat = array_values(array_unique([...($this->alasan_darurat ?? []), $alasan]));
+    }
+
+    /**
+     * @return HasMany<KirimanInstrumen, $this>
+     */
+    public function kirimanInstrumen(): HasMany
+    {
+        return $this->hasMany(KirimanInstrumen::class)->orderByDesc('id');
+    }
+
+    /**
+     * Pendampingan berjalan tetapi tanpa aktivitas sejak `$batas` (bawaan:
+     * JAM_MENGGANTUNG jam lalu).
+     *
+     * Aktivitas = pesan apa pun di percakapan (termasuk catatan sistem untuk
+     * penugasan, pertemuan, instrumen, usulan penutupan, buka kembali),
+     * penugasan konselor, atau pertemuan terjadwal yang belum lama berlalu
+     * maupun yang akan datang.
+     *
+     * @param  Builder<self>  $kueri
+     */
+    public function scopeMenggantung(Builder $kueri, ?Carbon $batas = null): void
+    {
+        $batas ??= now()->subHours(self::JAM_MENGGANTUNG);
+
+        $kueri->whereIn('status', [StatusPermintaan::Berlangsung->value, StatusPermintaan::MenungguPenutupan->value])
+            ->where(fn (Builder $kueri) => $kueri->whereNull('ditugaskan_pada')->orWhere('ditugaskan_pada', '<=', $batas))
+            ->whereDoesntHave('pesan', fn (Builder $kueri) => $kueri->where('created_at', '>', $batas))
+            ->whereDoesntHave('pertemuan', fn (Builder $kueri) => $kueri
+                ->where('status', StatusPertemuan::Terjadwal->value)
+                ->where('mulai_pada', '>', $batas));
+    }
+
+    /**
+     * Waktu aktivitas terakhir; butuh `aktivitas_pesan_pada` dan
+     * `aktivitas_pertemuan_pada` dari withMax (lihat IngatkanKasusMenggantung).
+     */
+    public function aktivitasTerakhir(): ?Carbon
+    {
+        $waktu = array_filter([
+            $this->ditugaskan_pada,
+            $this->aktivitas_pesan_pada ? Carbon::parse($this->aktivitas_pesan_pada) : null,
+            $this->aktivitas_pertemuan_pada ? Carbon::parse($this->aktivitas_pertemuan_pada) : null,
+        ]);
+
+        return $waktu === [] ? null : max($waktu);
+    }
+
+    /**
+     * Status dan tenggat memungkinkan anggota membuka kembali kasus ini.
+     * Pemeriksaan permintaan lain yang masih berjalan ada di kontroler.
+     */
+    public function masihBolehDibukaKembali(): bool
+    {
+        return $this->status === StatusPermintaan::Selesai
+            && $this->konselor_id !== null
+            && $this->selesai_pada !== null
+            && $this->selesai_pada->gte(now()->subDays(self::HARI_BUKA_KEMBALI));
+    }
+
+    public function batasBukaKembali(): ?Carbon
+    {
+        return $this->selesai_pada?->copy()->addDays(self::HARI_BUKA_KEMBALI);
     }
 
     /**
@@ -251,6 +327,8 @@ class Permintaan extends Model
             'catatan_komite' => 'encrypted',
             'diajukan_pada' => 'datetime',
             'selesai_pada' => 'datetime',
+            'dibuka_kembali_pada' => 'datetime',
+            'diingatkan_menggantung_pada' => 'datetime',
         ];
     }
 }

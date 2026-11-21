@@ -312,7 +312,9 @@ terbukti, kembalikan ke `/dev/null` dan hapus lognya.
 | Tugas terjadwal | Kapan |
 |---|---|
 | Mengosongkan antrean notifikasi (`queue:work --stop-when-empty`) | tiap menit |
+| Pengingat WhatsApp pesan belum dibuka/dibalas > 2 jam (`rangkul:ingatkan-pesan-tertunda`) | tiap 10 menit |
 | Pengingat pesan belum dibaca > 24 jam (`rangkul:ingatkan-pesan`) | tiap jam |
+| Laporan ke komite: kasus tanpa aktivitas > 48 jam (`rangkul:ingatkan-kasus-menggantung`) | tiap jam (menit ke-15) |
 | Pemangkasan audit log (`rangkul:pangkas-audit`) | tiap hari 02.30 WIB |
 
 Periksa beberapa menit kemudian:

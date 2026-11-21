@@ -4,6 +4,7 @@ use App\Http\Controllers\Anggota\PermintaanController as PermintaanAnggotaContro
 use App\Http\Controllers\BerandaController;
 use App\Http\Controllers\DepanController;
 use App\Http\Controllers\Kasus\CatatanSesiController;
+use App\Http\Controllers\Kasus\KirimanInstrumenController;
 use App\Http\Controllers\Kasus\PenutupanController;
 use App\Http\Controllers\Kasus\PercakapanController;
 use App\Http\Controllers\Kasus\PertemuanController;
@@ -15,6 +16,7 @@ use App\Http\Controllers\Kelola\PenggunaController;
 use App\Http\Controllers\Kelola\PeranController;
 use App\Http\Controllers\Kelola\PermintaanController as PermintaanKelolaController;
 use App\Http\Controllers\Kelola\RekapController;
+use App\Http\Controllers\Kelola\WaktuLayananController;
 use App\Http\Controllers\Konseling\KasusController;
 use App\Http\Controllers\MasukController;
 use App\Http\Controllers\SsoSpkController;
@@ -40,9 +42,9 @@ Route::middleware(['auth', PeriksaUlangAnggota::class])->group(function () {
     Route::controller(PermintaanAnggotaController::class)->group(function () {
         Route::get('permintaan', 'index')->name('permintaan.index');
         Route::post('permintaan', 'mulai')->name('permintaan.mulai');
-        Route::get('permintaan/{permintaan}', 'tampil')->whereNumber('permintaan')->name('permintaan.tampil');
-        Route::get('permintaan/{permintaan}/langkah/{langkah}', 'langkah')->whereNumber(['permintaan', 'langkah'])->name('permintaan.langkah');
-        Route::put('permintaan/{permintaan}/langkah/{langkah}', 'simpanLangkah')->whereNumber(['permintaan', 'langkah'])->name('permintaan.simpan');
+        Route::get('permintaan/{permintaan}', 'tampil')->name('permintaan.tampil');
+        Route::get('permintaan/{permintaan}/langkah/{langkah}', 'langkah')->whereNumber('langkah')->name('permintaan.langkah');
+        Route::put('permintaan/{permintaan}/langkah/{langkah}', 'simpanLangkah')->whereNumber('langkah')->name('permintaan.simpan');
         Route::post('permintaan/{permintaan}/kirim', 'kirim')->name('permintaan.kirim');
         Route::post('permintaan/{permintaan}/batalkan', 'batalkan')->name('permintaan.batalkan');
     });
@@ -51,7 +53,7 @@ Route::middleware(['auth', PeriksaUlangAnggota::class])->group(function () {
     | Tindakan pada satu kasus, dipakai anggota, konselor, dan komite.
     | Siapa boleh apa ditentukan PermintaanPolicy di tiap kontroler.
     */
-    Route::prefix('kasus/{permintaan}')->whereNumber('permintaan')->group(function () {
+    Route::prefix('kasus/{permintaan}')->group(function () {
         Route::get('pesan', [PercakapanController::class, 'daftar'])->name('percakapan.daftar');
         Route::post('pesan', [PercakapanController::class, 'kirim'])->middleware('throttle:30,1')->name('percakapan.kirim');
         Route::post('pertemuan', [PertemuanController::class, 'usul'])->name('pertemuan.usul');
@@ -62,6 +64,12 @@ Route::middleware(['auth', PeriksaUlangAnggota::class])->group(function () {
         Route::post('penutupan', [PenutupanController::class, 'usul'])->name('penutupan.usul');
         Route::post('penutupan/tanggapi', [PenutupanController::class, 'tanggapi'])->name('penutupan.tanggapi');
         Route::post('penutupan/putuskan', [PenutupanController::class, 'putuskan'])->name('penutupan.putuskan');
+        Route::post('penutupan/tutup', [PenutupanController::class, 'tutup'])->name('penutupan.tutup');
+        Route::post('buka-kembali', [PenutupanController::class, 'bukaKembali'])->name('penutupan.buka-kembali');
+        Route::post('instrumen', [KirimanInstrumenController::class, 'kirim'])->name('instrumen-kasus.kirim');
+        Route::get('instrumen/{kiriman}', [KirimanInstrumenController::class, 'isi'])->name('instrumen-kasus.isi');
+        Route::post('instrumen/{kiriman}', [KirimanInstrumenController::class, 'simpan'])->name('instrumen-kasus.simpan');
+        Route::post('instrumen/{kiriman}/batal', [KirimanInstrumenController::class, 'batal'])->name('instrumen-kasus.batal');
         Route::post('catatan', [CatatanSesiController::class, 'simpan'])->name('catatan.simpan');
     });
 
@@ -70,7 +78,7 @@ Route::middleware(['auth', PeriksaUlangAnggota::class])->group(function () {
     */
     Route::middleware('can:konseling.tangani')->group(function () {
         Route::get('konseling', [KasusController::class, 'index'])->name('konseling.index');
-        Route::get('konseling/{permintaan}', [KasusController::class, 'tampil'])->whereNumber('permintaan')->name('konseling.tampil');
+        Route::get('konseling/{permintaan}', [KasusController::class, 'tampil'])->name('konseling.tampil');
     });
 
     /*
@@ -82,7 +90,7 @@ Route::middleware(['auth', PeriksaUlangAnggota::class])->group(function () {
 
         Route::middleware('can:permintaan.kelola')->controller(PermintaanKelolaController::class)->group(function () {
             Route::get('permintaan', 'index')->name('permintaan.index');
-            Route::get('permintaan/{permintaan}', 'tampil')->whereNumber('permintaan')->name('permintaan.tampil');
+            Route::get('permintaan/{permintaan}', 'tampil')->name('permintaan.tampil');
             Route::post('permintaan/{permintaan}/tinjau', 'tinjau')->name('permintaan.tinjau');
             Route::post('permintaan/{permintaan}/tugaskan', 'tugaskan')->name('permintaan.tugaskan');
             Route::post('permintaan/{permintaan}/tolak', 'tolak')->name('permintaan.tolak');
@@ -137,5 +145,10 @@ Route::middleware(['auth', PeriksaUlangAnggota::class])->group(function () {
         // Hak per jenis rekap diperiksa di RekapController.
         Route::get('rekap', [RekapController::class, 'index'])->name('rekap.index');
         Route::get('rekap/{jenis}', [RekapController::class, 'unduh'])->name('rekap.unduh');
+
+        Route::middleware('can:waktu_layanan.rekap')->group(function () {
+            Route::get('waktu-layanan', [WaktuLayananController::class, 'index'])->name('waktu-layanan.index');
+            Route::get('waktu-layanan/unduh', [WaktuLayananController::class, 'unduh'])->name('waktu-layanan.unduh');
+        });
     });
 });

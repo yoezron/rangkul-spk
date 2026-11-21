@@ -26,6 +26,7 @@ class NotifikasiRangkul extends Notification implements ShouldQueue
     /**
      * @param  string  $jenis  kode kejadian, mis. `permintaan.masuk` (untuk pengujian dan pelacakan)
      * @param  list<string>  $paragraf
+     * @param  bool  $hanyaWhatsapp  lewati surel (untuk kabar percakapan yang harus cepat terbaca di ponsel)
      */
     public function __construct(
         public readonly string $jenis,
@@ -35,6 +36,7 @@ class NotifikasiRangkul extends Notification implements ShouldQueue
         public readonly string $teksTombol,
         public readonly string $tautan,
         public readonly bool $mendesak = false,
+        public readonly bool $hanyaWhatsapp = false,
     ) {}
 
     /**
@@ -44,7 +46,7 @@ class NotifikasiRangkul extends Notification implements ShouldQueue
     {
         $saluran = [];
 
-        if ($penerima instanceof User && $penerima->routeNotificationForMail() !== null) {
+        if (! $this->hanyaWhatsapp && $penerima instanceof User && $penerima->routeNotificationForMail() !== null) {
             $saluran[] = 'mail';
         }
 

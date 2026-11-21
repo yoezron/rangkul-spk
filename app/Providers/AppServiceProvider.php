@@ -3,10 +3,12 @@
 namespace App\Providers;
 
 use App\Enums\Hak;
+use App\Models\Permintaan;
 use App\Models\User;
 use App\Services\PengaturanRangkul;
 use Illuminate\Database\QueryException;
 use Illuminate\Support\Facades\Gate;
+use Illuminate\Support\Facades\Route;
 use Illuminate\Support\Facades\URL;
 use Illuminate\Support\ServiceProvider;
 
@@ -30,6 +32,11 @@ class AppServiceProvider extends ServiceProvider
         // permintaan ke PHP lewat proxy berprotokol http.
         if ($this->app->isProduction()) {
             URL::forceScheme('https');
+        }
+
+        // Kasus, pertemuan, dan kuesioner dirujuk di URL lewat kunci acak, bukan ID angka.
+        foreach (['permintaan', 'pertemuan', 'kiriman'] as $parameter) {
+            Route::pattern($parameter, '[A-Za-z0-9]{'.Permintaan::PANJANG_KUNCI_TAUTAN.'}');
         }
 
         // Satu gate per hak akses, dipakai lewat middleware `can:<hak>` dan @can.

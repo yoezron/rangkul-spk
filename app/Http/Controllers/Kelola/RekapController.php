@@ -98,7 +98,7 @@ class RekapController extends Controller
             fwrite($keluaran, "\xEF\xBB\xBF");
 
             foreach ($this->baris($jenis) as $baris) {
-                fputcsv($keluaran, array_map($this->amankanSel(...), $baris), $pemisah, '"', '');
+                fputcsv($keluaran, array_map(self::amankanSel(...), $baris), $pemisah, '"', '');
             }
 
             fclose($keluaran);
@@ -220,7 +220,7 @@ class RekapController extends Controller
      * Cegah injeksi rumus spreadsheet: sel yang diawali =, +, -, @, tab, atau
      * carriage return diberi awalan petik supaya dibaca sebagai teks.
      */
-    private function amankanSel(string|int|null $sel): string
+    public static function amankanSel(string|int|null $sel): string
     {
         $sel = (string) $sel;
 

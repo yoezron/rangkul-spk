@@ -74,7 +74,7 @@ class InstrumenController extends Controller
 
     public function destroy(Instrumen $instrumen): RedirectResponse
     {
-        if ($instrumen->jawaban()->exists()) {
+        if ($instrumen->jawaban()->exists() || $instrumen->kiriman()->exists()) {
             return back()->withErrors(['instrumen' => 'Instrumen yang sudah pernah dijawab tidak dapat dihapus. Nonaktifkan saja supaya tidak lagi muncul di formulir.']);
         }
 

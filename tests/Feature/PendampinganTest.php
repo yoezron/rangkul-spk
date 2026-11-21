@@ -57,6 +57,45 @@ class PendampinganTest extends TestCase
             ->assertJsonPath('pesan.0.milikSaya', true);
     }
 
+    public function test_tautan_kasus_memakai_kunci_acak_bukan_id_angka(): void
+    {
+        $kunci = $this->permintaan->kunci_tautan;
+
+        $this->assertMatchesRegularExpression('/^[A-Za-z0-9]{12}$/', $kunci);
+        $this->assertSame(url("/konseling/{$kunci}"), route('konseling.tampil', $this->permintaan));
+        $this->assertNotSame($kunci, $this->kasusBerlangsung()->kunci_tautan);
+
+        $this->masukSebagai($this->konselor)->get("/konseling/{$kunci}")->assertOk();
+        $this->get("/konseling/{$this->permintaan->id}")->assertNotFound();
+        $this->masukSebagai($this->komite)->get("/kelola/permintaan/{$this->permintaan->id}")->assertNotFound();
+        $this->get("/kelola/permintaan/{$kunci}")->assertOk();
+
+        $this->masukSebagai($this->anggota)->post("/kasus/{$this->permintaan->id}/pesan", ['isi' => 'Halo'])->assertNotFound();
+
+        $this->masukSebagai($this->konselor)->post(route('pertemuan.usul', $this->permintaan), ['mulai_pada' => now()->addDay()->format('Y-m-d H:i'), 'durasi_menit' => 60]);
+        $pertemuan = $this->permintaan->pertemuan()->sole();
+        $this->assertStringEndsWith("/pertemuan/{$pertemuan->kunci_tautan}/batal", route('pertemuan.batal', [$this->permintaan, $pertemuan]));
+
+        Notification::assertSentTo($this->anggota, NotifikasiRangkul::class, fn (NotifikasiRangkul $notifikasi): bool => $notifikasi->jenis === 'pertemuan.diusulkan'
+            && str_contains($notifikasi->tautan, "/permintaan/{$kunci}")
+            && ! str_contains($notifikasi->tautan, "/permintaan/{$this->permintaan->id}"));
+    }
+
+    public function test_formulir_di_halaman_kasus_kembali_ke_halaman_bukan_ke_json_polling(): void
+    {
+        $halaman = route('konseling.tampil', $this->permintaan);
+
+        $this->masukSebagai($this->konselor)->get($halaman)->assertOk()->assertSee("'X-Requested-With': 'XMLHttpRequest'", false);
+        $this->getJson(route('percakapan.daftar', $this->permintaan), ['X-Requested-With' => 'XMLHttpRequest'])->assertOk();
+
+        $this->from($halaman)->post(route('penutupan.usul', $this->permintaan), ['alasan' => 'Tujuan pendampingan tercapai.'])
+            ->assertRedirect($halaman);
+
+        $this->get($halaman);
+        $this->getJson(route('percakapan.daftar', $this->permintaan), ['X-Requested-With' => 'XMLHttpRequest'])->assertOk();
+        $this->assertSame($halaman, session()->previousUrl());
+    }
+
     public function test_komite_memantau_tanpa_mengirim_dan_tanpa_menandai_terbaca(): void
     {
         $this->masukSebagai($this->anggota)->postJson(route('percakapan.kirim', $this->permintaan), ['isi' => 'Pesan untuk konselor.']);

@@ -3,6 +3,7 @@
 namespace App\Services;
 
 use App\Enums\Hak;
+use App\Models\KirimanInstrumen;
 use App\Models\Permintaan;
 use App\Models\Pertemuan;
 use App\Models\User;
@@ -100,6 +101,55 @@ class PemberitahuLayanan
             ],
             teksTombol: 'Baca penjelasan',
             tautan: route('permintaan.tampil', $permintaan),
+        ));
+    }
+
+    /**
+     * WhatsApp ke pihak lawan bicara saat anggota atau konselor mengirim pesan
+     * percakapan pertamanya pada kasus ini. Pesan berikutnya tidak memicu
+     * notifikasi seketika; yang terlambat dibuka ditangani pesanTertunda().
+     */
+    public function pesanPertama(Permintaan $permintaan, User $pengirim): void
+    {
+        $dariAnggota = $pengirim->id === $permintaan->user_id;
+
+        $this->kirim($dariAnggota ? $permintaan->konselor : $permintaan->anggota, new NotifikasiRangkul(
+            jenis: 'pesan.pertama',
+            subjek: $dariAnggota ? "Pesan pertama dari anggota {$permintaan->kode}" : 'Pesan pertama dari konselor pendamping Anda',
+            judul: $dariAnggota ? 'Anggota yang Anda dampingi mulai bercerita' : 'Konselor pendamping Anda mengirim pesan',
+            paragraf: [
+                $dariAnggota
+                    ? "Anggota yang Anda dampingi ({$permintaan->kode}) baru saja mengirim pesan pertamanya di percakapan SPK Rangkul."
+                    : "Untuk permintaan {$permintaan->kode}, {$pengirim->nama} baru saja mengirim pesan pertamanya kepada Anda di SPK Rangkul.",
+                'Silakan buka percakapan untuk membaca dan membalasnya.',
+            ],
+            teksTombol: 'Buka percakapan',
+            tautan: $this->tautanPercakapan($permintaan, $dariAnggota),
+            hanyaWhatsapp: true,
+        ));
+    }
+
+    /**
+     * WhatsApp ke anggota atau konselor yang belum membuka maupun membalas pesan
+     * lawan bicaranya lebih dari `$jam` jam (lihat IngatkanPesanTertunda).
+     */
+    public function pesanTertunda(Permintaan $permintaan, User $penerima, int $jam): void
+    {
+        $untukKonselor = $penerima->id === $permintaan->konselor_id;
+
+        $this->kirim($penerima, new NotifikasiRangkul(
+            jenis: 'pesan.tertunda',
+            subjek: "Pesan menunggu Anda lebih dari {$jam} jam",
+            judul: $untukKonselor ? 'Pesan anggota menunggu tanggapan Anda' : 'Pesan konselor menunggu tanggapan Anda',
+            paragraf: [
+                $untukKonselor
+                    ? "Anggota yang Anda dampingi ({$permintaan->kode}) mengirim pesan lebih dari {$jam} jam lalu yang belum Anda buka atau balas."
+                    : "Konselor pendamping Anda mengirim pesan untuk permintaan {$permintaan->kode} lebih dari {$jam} jam lalu yang belum Anda buka atau balas.",
+                'Pengingat ini hanya dikirim sekali sampai Anda membuka percakapan.',
+            ],
+            teksTombol: 'Buka percakapan',
+            tautan: $this->tautanPercakapan($permintaan, $untukKonselor),
+            hanyaWhatsapp: true,
         ));
     }
 
@@ -249,7 +299,7 @@ class PemberitahuLayanan
             judul: $disetujui ? 'Proses konsultasi Anda telah ditutup' : 'Proses konsultasi Anda dilanjutkan',
             paragraf: [
                 $disetujui
-                    ? "Komite telah menyetujui penutupan permintaan {$permintaan->kode}. Terima kasih telah mempercayakan cerita Anda kepada SPK Rangkul. Bila suatu saat Anda membutuhkan dukungan lagi, Anda selalu dapat mengajukan permintaan baru."
+                    ? "Komite telah menyetujui penutupan permintaan {$permintaan->kode}. Terima kasih telah mempercayakan cerita Anda kepada SPK Rangkul. ".$this->kalimatLanjutan()
                     : "Komite meminta pendampingan untuk permintaan {$permintaan->kode} dilanjutkan. Konselor Anda akan tetap mendampingi.",
             ],
             teksTombol: 'Buka SPK Rangkul',
@@ -270,6 +320,157 @@ class PemberitahuLayanan
         ));
     }
 
+    /**
+     * Komite menutup langsung pendampingan yang menggantung atau sudah tuntas.
+     */
+    public function ditutupKomite(Permintaan $permintaan): void
+    {
+        $this->kirim($permintaan->anggota, new NotifikasiRangkul(
+            jenis: 'penutupan.komite',
+            subjek: 'Proses konsultasi ditutup',
+            judul: 'Proses konsultasi Anda telah ditutup',
+            paragraf: [
+                "Tim komite menutup proses konsultasi untuk permintaan {$permintaan->kode} dan menandainya selesai. Terima kasih telah mempercayakan cerita Anda kepada SPK Rangkul.",
+                $this->kalimatLanjutan(),
+            ],
+            teksTombol: 'Buka SPK Rangkul',
+            tautan: route('permintaan.tampil', $permintaan),
+        ));
+
+        $this->kirim($permintaan->konselor, new NotifikasiRangkul(
+            jenis: 'penutupan.komite',
+            subjek: "Kasus {$permintaan->kode} ditutup komite",
+            judul: 'Komite menutup kasus yang Anda dampingi',
+            paragraf: [
+                "Komite menutup permintaan {$permintaan->kode} dan menandainya selesai. Alasannya dapat dibaca di halaman kasus.",
+                'Mohon lengkapi catatan sesi bila masih ada yang belum ditulis.',
+            ],
+            teksTombol: 'Buka kasus',
+            tautan: route('konseling.tampil', $permintaan),
+        ));
+    }
+
+    /**
+     * Anggota membuka kembali kasus yang sudah selesai: konselor diberi tahu
+     * lewat surel dan WhatsApp, komite ikut diberi tahu.
+     */
+    public function dibukaKembali(Permintaan $permintaan): void
+    {
+        $konselor = $permintaan->konselor;
+        $konselorMasihAktif = $konselor !== null && $konselor->punyaHak(Hak::KonselingTangani);
+
+        $this->kirim($konselor, new NotifikasiRangkul(
+            jenis: 'permintaan.dibuka_kembali',
+            subjek: "Anggota membuka kembali {$permintaan->kode}",
+            judul: 'Anggota ingin melanjutkan pendampingan',
+            paragraf: [
+                "Anggota yang pernah Anda dampingi ({$permintaan->kode}) membuka kembali proses konsultasi dan menuliskan alasannya di percakapan.",
+                'Silakan buka percakapan dan sapa kembali anggota.',
+            ],
+            teksTombol: 'Buka percakapan',
+            tautan: route('konseling.tampil', $permintaan).'#percakapan',
+        ));
+
+        $this->kirim($this->komite($permintaan), new NotifikasiRangkul(
+            jenis: 'permintaan.dibuka_kembali_komite',
+            subjek: "Permintaan {$permintaan->kode} dibuka kembali",
+            judul: 'Anggota membuka kembali proses konsultasi',
+            paragraf: array_values(array_filter([
+                "Anggota membuka kembali permintaan {$permintaan->kode} yang sebelumnya selesai. Pendampingan dilanjutkan oleh ".($konselor?->nama ?? 'konselor sebelumnya').'.',
+                $konselorMasihAktif
+                    ? 'Bila konselor tersebut berhalangan, Anda dapat menugaskan pendamping lain.'
+                    : 'Konselor tersebut tidak lagi memegang peran peer konselor. Mohon segera tugaskan pendamping lain.',
+            ])),
+            teksTombol: 'Pantau kasus',
+            tautan: route('kelola.permintaan.tampil', $permintaan),
+            mendesak: ! $konselorMasihAktif,
+        ));
+    }
+
+    /**
+     * Ringkasan untuk komite: kasus berjalan yang tanpa aktivitas lebih dari
+     * JAM_MENGGANTUNG jam. Satu notifikasi untuk semua kasus sekaligus.
+     *
+     * @param  Collection<int, Permintaan>  $daftar
+     */
+    public function kasusMenggantung(Collection $daftar): void
+    {
+        $jam = Permintaan::JAM_MENGGANTUNG;
+        $jumlah = $daftar->count();
+
+        $this->kirim($this->komite(), new NotifikasiRangkul(
+            jenis: 'kasus.menggantung',
+            subjek: "{$jumlah} kasus tanpa aktivitas lebih dari {$jam} jam",
+            judul: 'Ada pendampingan yang menggantung',
+            paragraf: [
+                "Kasus berikut belum selesai, tetapi tidak ada aktivitas konsultasi lebih dari {$jam} jam: ".$daftar->pluck('kode')->implode(', ').'.',
+                'Bila pendampingan sudah tuntas, tutup kasusnya dan tandai selesai. Bila belum, hubungi konselor pendampingnya.',
+            ],
+            teksTombol: 'Lihat kasus menggantung',
+            tautan: route('kelola.permintaan.index', ['status' => 'menggantung']),
+        ));
+    }
+
+    public function instrumenDikirim(KirimanInstrumen $kiriman): void
+    {
+        $permintaan = $kiriman->permintaan;
+
+        $this->kirim($permintaan->anggota, new NotifikasiRangkul(
+            jenis: 'instrumen.dikirim',
+            subjek: 'Konselor meminta Anda mengisi kuesioner',
+            judul: 'Ada kuesioner dari konselor pendamping Anda',
+            paragraf: [
+                "Untuk permintaan {$permintaan->kode}, konselor pendamping Anda mengirim kuesioner singkat untuk diisi.",
+                'Jawaban Anda membantu konselor memahami keadaan Anda. Hasilnya hanya dibaca konselor dan komite.',
+            ],
+            teksTombol: 'Isi kuesioner',
+            tautan: route('instrumen-kasus.isi', [$permintaan, $kiriman]),
+        ));
+    }
+
+    /**
+     * Anggota selesai mengisi instrumen. Bila ada butir kritis, konselor
+     * diberi tanda mendesak dan komite diberi tahu seketika.
+     */
+    public function instrumenDiisi(KirimanInstrumen $kiriman): void
+    {
+        $permintaan = $kiriman->permintaan;
+
+        $this->kirim($permintaan->konselor, new NotifikasiRangkul(
+            jenis: 'instrumen.diisi',
+            subjek: "Kuesioner {$permintaan->kode} sudah diisi",
+            judul: $kiriman->kritis ? 'Kuesioner diisi — ada butir kritis' : 'Anggota sudah mengisi kuesioner',
+            paragraf: array_values(array_filter([
+                "Anggota yang Anda dampingi ({$permintaan->kode}) sudah mengisi {$kiriman->nama_instrumen}. Hasilnya dapat Anda baca di halaman kasus.",
+                $kiriman->kritis ? 'Ada jawaban yang menunjukkan kemungkinan risiko keselamatan. Mohon segera hubungi anggota.' : null,
+            ])),
+            teksTombol: 'Baca hasil',
+            tautan: route('konseling.tampil', $permintaan).'#instrumen',
+            mendesak: $kiriman->kritis,
+        ));
+
+        if ($kiriman->kritis) {
+            $this->kirim($this->komite($permintaan), new NotifikasiRangkul(
+                jenis: 'instrumen.kritis',
+                subjek: "Butir kritis pada kuesioner {$permintaan->kode}",
+                judul: 'Kuesioner di tengah pendampingan menunjukkan kemungkinan risiko',
+                paragraf: [
+                    "Anggota pada permintaan {$permintaan->kode} mengisi {$kiriman->nama_instrumen} dengan jawaban kritis. Permintaan kini ditandai DARURAT.",
+                    'Mohon pastikan konselor segera menghubungi anggota.',
+                ],
+                teksTombol: 'Pantau kasus',
+                tautan: route('kelola.permintaan.tampil', $permintaan),
+                mendesak: true,
+            ));
+        }
+    }
+
+    private function kalimatLanjutan(): string
+    {
+        return 'Bila Anda masih membutuhkan pendampingan untuk hal yang sama, Anda dapat membuka kembali percakapan ini dalam '
+            .Permintaan::HARI_BUKA_KEMBALI.' hari. Untuk hal lain, atau setelah itu, Anda selalu dapat mengajukan permintaan baru.';
+    }
+
     public function penutupanDitolakAnggota(Permintaan $permintaan): void
     {
         $this->kirim($permintaan->konselor, new NotifikasiRangkul(
@@ -280,6 +481,11 @@ class PemberitahuLayanan
             teksTombol: 'Buka kasus',
             tautan: route('konseling.tampil', $permintaan),
         ));
+    }
+
+    private function tautanPercakapan(Permintaan $permintaan, bool $untukKonselor): string
+    {
+        return ($untukKonselor ? route('konseling.tampil', $permintaan) : route('permintaan.tampil', $permintaan)).'#percakapan';
     }
 
     /**

@@ -67,7 +67,15 @@ class PermintaanPolicy
     }
 
     /**
-     * Tindakan konselor: mengusulkan pertemuan dan penutupan.
+     * Anggota membuka kembali kasus yang selesai dalam HARI_BUKA_KEMBALI hari.
+     */
+    public function bukaKembali(User $pengguna, Permintaan $permintaan): bool
+    {
+        return $this->milik($pengguna, $permintaan) && $permintaan->masihBolehDibukaKembali();
+    }
+
+    /**
+     * Tindakan konselor: mengusulkan pertemuan dan penutupan, mengirim instrumen.
      */
     public function tangani(User $pengguna, Permintaan $permintaan): bool
     {

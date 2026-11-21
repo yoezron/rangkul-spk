@@ -42,6 +42,7 @@ class PermintaanController extends Controller
             ->when($status === 'terbuka', fn (Builder $kueri) => $kueri->whereNotIn('status', [StatusPermintaan::Selesai->value, StatusPermintaan::Ditolak->value, StatusPermintaan::Dibatalkan->value]))
             ->when($status === 'belum_ditugaskan', fn (Builder $kueri) => $kueri->whereNull('konselor_id')->whereIn('status', [StatusPermintaan::Diajukan->value, StatusPermintaan::Ditinjau->value]))
             ->when($status === 'darurat', fn (Builder $kueri) => $kueri->where('darurat', true)->whereNotIn('status', [StatusPermintaan::Selesai->value, StatusPermintaan::Ditolak->value, StatusPermintaan::Dibatalkan->value]))
+            ->when($status === 'menggantung', fn (Builder $kueri) => $kueri->menggantung())
             ->when(StatusPermintaan::tryFrom($status) !== null, fn (Builder $kueri) => $kueri->where('status', $status))
             ->when($cari !== '', function (Builder $kueri) use ($cari): void {
                 $pola = '%'.addcslashes($cari, '%_\\').'%';
@@ -59,12 +60,13 @@ class PermintaanController extends Controller
     {
         Gate::authorize('kelola', $permintaan);
 
-        $permintaan->load(['anggota', 'konselor', 'jawabanAsesmen', 'pertemuan', 'catatanSesi.penulis', 'catatanSesi.pertemuan']);
+        $permintaan->load(['anggota', 'konselor', 'jawabanAsesmen', 'kirimanInstrumen', 'pertemuan', 'catatanSesi.penulis', 'catatanSesi.pertemuan']);
         $this->audit->catat('permintaan.dibuka', $permintaan->kode);
 
         return view('kelola.permintaan.tampil', [
             'permintaan' => $permintaan,
             'calonKonselor' => $this->calonKonselor($permintaan),
+            'menggantung' => Permintaan::query()->whereKey($permintaan->id)->menggantung()->exists(),
         ]);
     }
 
