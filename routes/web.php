@@ -18,6 +18,7 @@ use App\Http\Controllers\Kelola\PermintaanController as PermintaanKelolaControll
 use App\Http\Controllers\Kelola\RekapController;
 use App\Http\Controllers\Kelola\WaktuLayananController;
 use App\Http\Controllers\Konseling\KasusController;
+use App\Http\Controllers\Konseling\StatistikController;
 use App\Http\Controllers\MasukController;
 use App\Http\Controllers\SsoSpkController;
 use App\Http\Middleware\PeriksaUlangAnggota;
@@ -78,6 +79,7 @@ Route::middleware(['auth', PeriksaUlangAnggota::class])->group(function () {
     */
     Route::middleware('can:konseling.tangani')->group(function () {
         Route::get('konseling', [KasusController::class, 'index'])->name('konseling.index');
+        Route::get('konseling/statistik', StatistikController::class)->name('konseling.statistik');
         Route::get('konseling/{permintaan}', [KasusController::class, 'tampil'])->name('konseling.tampil');
     });
 

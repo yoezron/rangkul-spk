@@ -40,12 +40,37 @@ class PenghitungWaktuLayanan
     public function rekap(Carbon $bulan): array
     {
         $awal = $bulan->copy()->startOfMonth();
-        $akhir = $awal->copy()->addMonth();
+
+        return $this->rekapRentang($awal, $awal->copy()->addMonth());
+    }
+
+    /**
+     * Baris satu konselor untuk rentang [`$awal`, `$akhir`), atau null bila
+     * tidak ada waktu layanan yang terhitung.
+     *
+     * @return array{konselor: User, menit_percakapan: int, menit_pertemuan: int, menit_total: int, kasus: list<array{permintaan: Permintaan, menit_percakapan: int, menit_pertemuan: int, menit_total: int}>}|null
+     */
+    public function rekapKonselor(User $konselor, Carbon $awal, Carbon $akhir): ?array
+    {
+        return $this->rekapRentang($awal, $akhir, $konselor)[0] ?? null;
+    }
+
+    /**
+     * @return list<array{konselor: User, menit_percakapan: int, menit_pertemuan: int, menit_total: int, kasus: list<array{permintaan: Permintaan, menit_percakapan: int, menit_pertemuan: int, menit_total: int}>}>
+     */
+    private function rekapRentang(Carbon $awal, Carbon $akhir, ?User $hanyaKonselor = null): array
+    {
         $jendela = [[$awal->getTimestamp(), $akhir->getTimestamp()]];
 
         $kehadiran = KehadiranPercakapan::query()
             ->where('mulai_pada', '<', $akhir)
             ->where('terakhir_pada', '>', $awal)
+            ->when($hanyaKonselor !== null, fn ($kueri) => $kueri->whereIn('permintaan_id', KehadiranPercakapan::query()
+                ->select('permintaan_id')
+                ->where('user_id', $hanyaKonselor->id)
+                ->where('sebagai', 'konselor')
+                ->where('mulai_pada', '<', $akhir)
+                ->where('terakhir_pada', '>', $awal)))
             ->get()
             ->groupBy('permintaan_id');
 
@@ -53,6 +78,11 @@ class PenghitungWaktuLayanan
             ->where('status', StatusPertemuan::Terjadwal->value)
             ->where('mulai_pada', '<', $akhir)
             ->where('mulai_pada', '>=', $awal->copy()->subDay())
+            ->when($hanyaKonselor !== null, fn ($kueri) => $kueri->where(fn ($kueri) => $kueri
+                ->where('diusulkan_oleh', $hanyaKonselor->id)
+                ->orWhere(fn ($kueri) => $kueri
+                    ->whereNull('diusulkan_oleh')
+                    ->whereIn('permintaan_id', Permintaan::query()->select('id')->where('konselor_id', $hanyaKonselor->id)))))
             ->get()
             ->filter(fn (Pertemuan $satu): bool => $satu->mulai_pada->copy()->addMinutes($satu->durasi_menit)->lte(now()))
             ->groupBy('permintaan_id');
@@ -113,7 +143,7 @@ class PenghitungWaktuLayanan
         foreach ($rentang as $idKonselor => $perKasus) {
             $konselor = $daftarKonselor->get($idKonselor);
 
-            if ($konselor === null) {
+            if ($konselor === null || ($hanyaKonselor !== null && ! $konselor->is($hanyaKonselor))) {
                 continue;
             }
 

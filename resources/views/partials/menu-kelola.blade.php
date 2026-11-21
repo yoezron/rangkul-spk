@@ -9,6 +9,7 @@
             ['dasbor', 'kelola.dasbor', 'Ringkasan', 'dasbor.lihat', 'grafik'],
             ['permintaan', 'kelola.permintaan.index', 'Permintaan layanan', 'permintaan.kelola', 'kotak-masuk'],
             ['kasus', 'konseling.index', 'Kasus pendampingan saya', 'konseling.tangani', 'chat'],
+            ['statistik-saya', 'konseling.statistik', 'Statistik layanan saya', 'konseling.tangani', 'grafik'],
             ['instrumen', 'kelola.instrumen.index', 'Asesmen dasar', 'asesmen.kelola', 'klipboard'],
             ['waktu-layanan', 'kelola.waktu-layanan.index', 'Waktu layanan konselor', 'waktu_layanan.rekap', 'jam'],
         ],
